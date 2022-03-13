@@ -1,0 +1,7 @@
+name: Proximity_Voice_Chat
+version: '${project.version}'
+main: com.pvchat.proximityvoicechat.ProximityVoiceChat
+api-version: 1.18
+authors: [ Adam_Barankiewicz, Bartosz_Sulima, Dawid_Drozd, Mateusz_Blazejewski, Stefan_Machay, Wladyslaw_Nowak ]
+description: Complete solution for small groups of players with a Minecraft server and a Discord guild that allows for immersive in-game communication through proximity voice chat with distance-based attenuation.
+website: https://github.com/smachay/minecraft-proximity-voice-chat
