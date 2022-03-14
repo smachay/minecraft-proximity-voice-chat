@@ -1,0 +1,6 @@
+defaultMaxHearDistance: 100
+defaultNoAttenuationDistance: 10
+defaultLinearAttenuationFactor: 0.9
+links:
+  player1: discord1
+  player2: discord2

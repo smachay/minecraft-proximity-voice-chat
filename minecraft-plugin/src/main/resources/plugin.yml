@@ -5,7 +5,3 @@ api-version: 1.18
 authors: [ Adam_Barankiewicz, Bartosz_Sulima, Dawid_Drozd, Mateusz_Blazejewski, Stefan_Machay, Wladyslaw_Nowak ]
 description: Voice chat with distance-based attenuation.
 website: https://github.com/smachay/minecraft-proximity-voice-chat
-commands:
-  moveup:
-    description: Moves you given number of blocks up.
-    usage: /<command> <number_of_blocks>
