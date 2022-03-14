@@ -34,20 +34,21 @@ public class PluginConfiguration {
 
 
     //example usage
-    public static void main(String[] args) {
-        try {
-            PluginConfiguration.saveDefaultConfig(System.getProperty("user.dir") + File.separator + "plugin.properties");
-            PluginConfiguration.load(System.getProperty("user.dir") + File.separator + "plugin.properties");
-            System.out.println(PluginConfiguration.maxHearDistance);
-            System.out.println(PluginConfiguration.noAttenuationDistance);
-            System.out.println(PluginConfiguration.linearAttenuationFactor);
-
-            PluginConfiguration.setMaxHearDistance(124);
-            PluginConfiguration.save();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+//    public static void main(String[] args) {
+//        try {
+//            PluginConfiguration.saveDefaultConfig(System.getProperty("user.dir") + File.separator + "plugin.properties");
+//            System.out.println(System.getProperty("user.dir") + File.separator + "plugin.properties");
+//            PluginConfiguration.load(System.getProperty("user.dir") + File.separator + "plugin.properties");
+//            System.out.println(PluginConfiguration.maxHearDistance);
+//            System.out.println(PluginConfiguration.noAttenuationDistance);
+//            System.out.println(PluginConfiguration.linearAttenuationFactor);
+//
+//            PluginConfiguration.setMaxHearDistance(124);
+//            PluginConfiguration.save();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     /**
      * @return {@link java.util.Properties} containing default properties based on {@link PluginConfiguration} fields with names starting from "default".
