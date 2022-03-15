@@ -1,15 +1,20 @@
 package com.pvchat.proximityvoicechat.plugin;
+
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+
 import java.util.HashMap;
 import java.util.Set;
+import java.util.UUID;
 
 public class ConfigManager {
     ProximityVoiceChat pluginInstance;
     private int maxHearDistance;
     private int noAttenuationDistance;
     private float linearAttenuationFactor;
-    private HashMap<String, String> playerLinks;
+
+    //Player IGN - discord name map
+    private HashMap<UUID, String> playerLinks;
 
     public ConfigManager(ProximityVoiceChat pluginInstance) {
         this.pluginInstance = pluginInstance;
@@ -23,10 +28,14 @@ public class ConfigManager {
         linearAttenuationFactor = (float) config.getDouble("defaultLinearAttenuationFactor");
         ConfigurationSection section = config.getConfigurationSection("links");
         playerLinks = new HashMap<>();
-        Set<String> keys = section.getKeys(false);
-        keys.forEach(s -> {
-            playerLinks.put(s, section.getString(s));
-        });
+        if (section != null) {
+            Set<String> keys = section.getKeys(false);
+            keys.forEach(s -> {
+                String value = section.getString(s);
+                if (value != null) playerLinks.put(UUID.fromString(s), value);
+
+            });
+        }
     }
 
     public int getMaxHearDistance() {
@@ -51,6 +60,14 @@ public class ConfigManager {
 
     public void setLinearAttenuationFactor(float linearAttenuationFactor) {
         this.linearAttenuationFactor = linearAttenuationFactor;
+    }
+
+    public HashMap<UUID, String> getPlayerLinks() {
+        return playerLinks;
+    }
+
+    public void setPlayerLinks(HashMap<UUID, String> playerLinks) {
+        this.playerLinks = playerLinks;
     }
 
 }
