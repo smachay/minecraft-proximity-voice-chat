@@ -1,0 +1,4 @@
+name: Proximity_Voice_Chat
+version: '${project.version}'
+main: com.pvchat.proximityvoicechat.plugin.ProximityVoiceChat
+api-version: 1.18
