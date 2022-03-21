@@ -1,5 +1,6 @@
-package com.pvchat.proximityvoicechat.plugin;
+package com.pvchat.proximityvoicechat.plugin.distanceMatrix;
 
+import com.pvchat.proximityvoicechat.plugin.ProximityVoiceChat;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -21,6 +22,7 @@ public class PlayerDistanceMatrix {
     public void getPlayers(){
         Collection<? extends Player> p = Bukkit.getOnlinePlayers();
         players = new ArrayList<>(p.stream().toList());
+        players.get(0).getWorld().getName();//world
     }
 
     public void getNewDistanceMatrix() {
