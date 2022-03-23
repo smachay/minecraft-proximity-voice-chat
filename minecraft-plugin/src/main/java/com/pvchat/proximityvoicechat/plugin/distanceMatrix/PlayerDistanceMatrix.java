@@ -37,7 +37,18 @@ public class PlayerDistanceMatrix {
     }
 
     public double distanceCalculator(Location location1, Location location2){
-        return Math.sqrt((Math.pow(location1.getX()-location2.getX(),2)+Math.pow(location1.getY()-location2.getY(),2)+Math.pow(location1.getZ()-location2.getZ(),2)));
+        return location1.distance(location2);
+    }
+
+    public int calculateVolume(double distance){
+        if (distance>110){
+            return -1;
+        }else if (distance<=10){
+            return 100;
+        }else{
+            return (int) (110-distance);
+        }
+
     }
 
     public void updateMatrix(){
