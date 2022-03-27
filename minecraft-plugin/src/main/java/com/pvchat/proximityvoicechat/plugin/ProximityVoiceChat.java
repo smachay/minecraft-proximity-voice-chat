@@ -23,14 +23,6 @@ public final class ProximityVoiceChat extends JavaPlugin {
 
         playerDistanceAndVolumeCalculations.updatePlayerList();
 
-        ArrayList<PlayerVolumeData> volumeList=playerDistanceAndVolumeCalculations.playerVolumeList();
-        if (volumeList!=null){
-            for (int i = 0; i < volumeList.size(); i++) {
-                PlayerVolumeData temp=volumeList.get(i);
-                System.out.println("Player1: "+temp.getPlayer1ID()+" Player2: "+temp.getPlayer2ID()+" Volume: "+temp.getVolumeLevel());
-
-            }
-        }
 
     }
 

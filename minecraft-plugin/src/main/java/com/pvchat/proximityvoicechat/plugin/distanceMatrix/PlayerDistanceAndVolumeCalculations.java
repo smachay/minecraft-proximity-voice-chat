@@ -23,20 +23,17 @@ public class PlayerDistanceAndVolumeCalculations {
 
     //Getting Online players
     public void getPlayers() {
-        Collection<? extends Player> p = Bukkit.getOnlinePlayers();
-        players = new ArrayList<>(p.stream().toList());
+
+        players = new ArrayList<>(Bukkit.getOnlinePlayers().stream().toList());
         playersOverwold = new ArrayList<>();
         playersNether = new ArrayList<>();
         playersEnd = new ArrayList<>();
 
         //Dividing per realm
-        for (int i = 0; i < players.size(); i++) {
-            Player temp = players.get(i);
-
+        for (Player temp : players) {
             String world = temp.getWorld().getName();
 
             if (world.equals("world")) {
-                System.out.println("wo");
                 playersOverwold.add(temp);
             } else if (world.equals("world_nether")) {
                 playersNether.add(temp);
@@ -44,76 +41,43 @@ public class PlayerDistanceAndVolumeCalculations {
                 playersEnd.add(temp);
             }
         }
+    }
 
+    private void addToVolumeList(ArrayList<PlayerVolumeData>  playerVolumeList, ArrayList<Player>  playersOfSomeWorld){
+        int size = playersOfSomeWorld.size();
+        if (size > 1) {
+            for (int i = 0; i < size; i++) {
+                for (int j = i + 1; j < size; j++) {
+                    Player p1, p2;
+                    p1 = playersOfSomeWorld.get(i);
+                    p2 = playersOfSomeWorld.get(j);
+                    double distance = distanceCalculator(p1.getLocation(), p2.getLocation());
+                    //System.out.println("distance " + distance);
+                    long volume = calculateVolume(distance);
+                    if (volume != -1) {
+                        //PlayerVolumeData temporary = new PlayerVolumeData(p1.getName(), p2.getName(), volume);
+                        PlayerVolumeData temporary = new PlayerVolumeData(p1.getUniqueId().toString(),p2.getUniqueId().toString(),volume);
+                        playerVolumeList.add(temporary);
+                    }
+                }
+            }
+        }
     }
 
     //getting list of player volume pairs
     public ArrayList<PlayerVolumeData> playerVolumeList() {
-        ArrayList<PlayerVolumeData> p = p = new ArrayList<>();
+        ArrayList<PlayerVolumeData> p = new ArrayList<>();
         if (players.size() > 1) {
+            //System.out.println("ilosc graczy na serw: "+players.size());
 
-            int ov = playersOverwold.size();
-            int ne = playersNether.size();
-            int en = playersEnd.size();
-            if (ov > 1) {
-                for (int i = 0; i < ov; i++) {
-                    for (int j = i + 1; j < ov; j++) {
-                        Player p1, p2;
-                        p1 = playersOverwold.get(i);
-                        p2 = playersOverwold.get(j);
-                        double distance = distanceCalculator(p1.getLocation(), p2.getLocation());
-                        System.out.println(" word "+distance);
-                        int volume = calculateVolume(distance);
-                        if (volume != -1) {
-                            PlayerVolumeData temporary = new PlayerVolumeData(p1.getName(), p2.getName(), volume);
-                            //PlayerVolumeData temporary=new PlayerVolumeData(p1.getUniqueId().toString(),p2.getUniqueId().toString(),volume);
-                            p.add(temporary);
-                        }
-                    }
-                }
-
-
-            }
-
-            if (ne > 1) {
-                for (int i = 0; i < ne; i++) {
-                    for (int j = i + 1; j < ne; j++) {
-                        Player p1, p2;
-                        p1 = playersNether.get(i);
-                        p2 = playersNether.get(j);
-                        double distance = distanceCalculator(p1.getLocation(), p2.getLocation());
-                        System.out.println(" neth "+distance);
-                        int volume = calculateVolume(distance);
-                        if (volume != -1) {
-                            PlayerVolumeData temporary = new PlayerVolumeData(p1.getName(), p2.getName(), volume);
-                            //PlayerVolumeData temporary=new PlayerVolumeData(p1.getUniqueId().toString(),p2.getUniqueId().toString(),volume);
-                            p.add(temporary);
-                        }
-                    }
-                }
-            }
-
-            if (en > 1) {
-                for (int i = 0; i < en; i++) {
-                    for (int j = i + 1; j < en; j++) {
-                        Player p1, p2;
-                        p1 = playersEnd.get(i);
-                        p2 = playersEnd.get(j);
-                        double distance = distanceCalculator(p1.getLocation(), p2.getLocation());
-                        System.out.println(" end "+ distance);
-                        int volume = calculateVolume(distance);
-                        if (volume != -1) {
-                            PlayerVolumeData temporary = new PlayerVolumeData(p1.getName(), p2.getName(), volume);
-                            //PlayerVolumeData temporary=new PlayerVolumeData(p1.getUniqueId().toString(),p2.getUniqueId().toString(),volume);
-                            p.add(temporary);
-                        }
-                    }
-                }
-            }
+            addToVolumeList(p, playersOverwold);
+            addToVolumeList(p, playersNether);
+            addToVolumeList(p, playersEnd);
 
         }
 
         if (p.size() == 0) {
+            //System.out.println("null volume list");
             return null;
         }
         return p;
@@ -126,19 +90,27 @@ public class PlayerDistanceAndVolumeCalculations {
     }
 
     //Calculating Volume
-    private int calculateVolume(double distance) {
+    private long calculateVolume(double distance) {
         if (distance > 110) {
             return -1;
         } else if (distance <= 10) {
             return 100;
         } else {
-            return (int) (110 - distance);
+            return Math.round(110 - distance);
         }
 
     }
 
     //updating player list
     public void updatePlayerList() {
-        Bukkit.getScheduler().scheduleSyncRepeatingTask(pluginInstance, this::getPlayers, 0, 10);
+        Bukkit.getScheduler().scheduleAsyncRepeatingTask(pluginInstance, () -> {
+            getPlayers();
+            ArrayList<PlayerVolumeData> volumeList=playerVolumeList();
+            if (volumeList!=null){
+                for (PlayerVolumeData temp : volumeList) {
+                    System.out.println("Player1: " + temp.getPlayer1ID() + " Player2: " + temp.getPlayer2ID() + " Volume: " + temp.getVolumeLevel());
+                }
+            }
+        }, 0, 10);
     }
 }

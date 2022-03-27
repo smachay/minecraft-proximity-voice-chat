@@ -3,9 +3,9 @@ package com.pvchat.proximityvoicechat.plugin.distanceMatrix;
 public class PlayerVolumeData {
  private String player1ID;
  private String player2ID;
- private int volumeLevel;
+ private long volumeLevel;
 
-    public PlayerVolumeData(String player1ID, String player2ID, int volumeLevel) {
+    public PlayerVolumeData(String player1ID, String player2ID, long volumeLevel) {
         this.player1ID = player1ID;
         this.player2ID = player2ID;
         this.volumeLevel = volumeLevel;
@@ -27,7 +27,7 @@ public class PlayerVolumeData {
         this.player2ID = player2ID;
     }
 
-    public int getVolumeLevel() {
+    public long getVolumeLevel() {
         return volumeLevel;
     }
 
