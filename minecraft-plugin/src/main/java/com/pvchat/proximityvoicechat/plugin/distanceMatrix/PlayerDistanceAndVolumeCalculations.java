@@ -32,10 +32,13 @@ public class PlayerDistanceAndVolumeCalculations {
         //Dividing per realm
         for (int i = 0; i < players.size(); i++) {
             Player temp = players.get(i);
+
             String world = temp.getWorld().getName();
-            if (world.equals("Overworld")) {
+
+            if (world.equals("world")) {
+                System.out.println("wo");
                 playersOverwold.add(temp);
-            } else if (world.equals("Nether")) {
+            } else if (world.equals("world_nether")) {
                 playersNether.add(temp);
             } else {
                 playersEnd.add(temp);
@@ -59,6 +62,7 @@ public class PlayerDistanceAndVolumeCalculations {
                         p1 = playersOverwold.get(i);
                         p2 = playersOverwold.get(j);
                         double distance = distanceCalculator(p1.getLocation(), p2.getLocation());
+                        System.out.println(" word "+distance);
                         int volume = calculateVolume(distance);
                         if (volume != -1) {
                             PlayerVolumeData temporary = new PlayerVolumeData(p1.getName(), p2.getName(), volume);
@@ -78,6 +82,7 @@ public class PlayerDistanceAndVolumeCalculations {
                         p1 = playersNether.get(i);
                         p2 = playersNether.get(j);
                         double distance = distanceCalculator(p1.getLocation(), p2.getLocation());
+                        System.out.println(" neth "+distance);
                         int volume = calculateVolume(distance);
                         if (volume != -1) {
                             PlayerVolumeData temporary = new PlayerVolumeData(p1.getName(), p2.getName(), volume);
@@ -95,6 +100,7 @@ public class PlayerDistanceAndVolumeCalculations {
                         p1 = playersEnd.get(i);
                         p2 = playersEnd.get(j);
                         double distance = distanceCalculator(p1.getLocation(), p2.getLocation());
+                        System.out.println(" end "+ distance);
                         int volume = calculateVolume(distance);
                         if (volume != -1) {
                             PlayerVolumeData temporary = new PlayerVolumeData(p1.getName(), p2.getName(), volume);
@@ -133,9 +139,6 @@ public class PlayerDistanceAndVolumeCalculations {
 
     //updating player list
     public void updatePlayerList() {
-        Bukkit.getScheduler().scheduleSyncRepeatingTask(pluginInstance, () -> {
-            getPlayers();
-
-        }, 0, 10);
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(pluginInstance, this::getPlayers, 0, 10);
     }
 }
