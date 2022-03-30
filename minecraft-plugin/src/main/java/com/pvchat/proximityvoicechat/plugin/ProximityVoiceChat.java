@@ -14,7 +14,6 @@ public final class ProximityVoiceChat extends JavaPlugin {
         new PlayerVolumeServer(configManager.getWebSocketPort()).run();
 
         //Load config from config.yml file
-        configManager.loadConfig();
     }
 
     @Override
