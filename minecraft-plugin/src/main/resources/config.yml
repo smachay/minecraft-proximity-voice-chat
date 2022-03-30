@@ -1,6 +1,6 @@
-MaxHearDistance: 100
-NoAttenuationDistance: 10
-LinearAttenuationFactor: 0.9
+maxHearDistance: 100
+noAttenuationDistance: 10
+linearAttenuationFactor: 0.9
 links:
   58814608-71ec-48f0-b135-c948b8c48494: discord1
   7f909474-9476-4c27-8532-04fc6e92ebc8: discord2
