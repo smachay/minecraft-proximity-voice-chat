@@ -12,6 +12,7 @@ public class ConfigManager {
     private int maxHearDistance;
     private int noAttenuationDistance;
     private float linearAttenuationFactor;
+    private int webSocketPort;
 
     //Player IGN - discord name map
     private HashMap<UUID, String> playerLinks;
@@ -26,6 +27,7 @@ public class ConfigManager {
         maxHearDistance = config.getInt("defaultMaxHearDistance");
         noAttenuationDistance = config.getInt("defaultNoAttenuationDistance");
         linearAttenuationFactor = (float) config.getDouble("defaultLinearAttenuationFactor");
+        webSocketPort = config.getInt("webSocketPort");
         ConfigurationSection section = config.getConfigurationSection("links");
         playerLinks = new HashMap<>();
         if (section != null) {
@@ -68,6 +70,10 @@ public class ConfigManager {
 
     public void setPlayerLinks(HashMap<UUID, String> playerLinks) {
         this.playerLinks = playerLinks;
+    }
+
+    public int getWebSocketPort() {
+        return webSocketPort;
     }
 
 }
