@@ -15,6 +15,8 @@ public final class ProximityVoiceChat extends JavaPlugin {
         // Plugin startup logic
         // PluginConfiguration is not used, ConfigManager is used instead
         configManager = new ConfigManager(this);
+        configManager.loadConfig();
+        new PlayerVolumeServer(configManager.getWebSocketPort()).run();
 
         //Load config from config.yml file
         configManager.loadConfig();
@@ -22,8 +24,6 @@ public final class ProximityVoiceChat extends JavaPlugin {
         playerDistanceAndVolumeCalculations = new PlayerDistanceAndVolumeCalculations(this);
 
         playerDistanceAndVolumeCalculations.updatePlayerList();
-
-
     }
 
     @Override
