@@ -3,10 +3,13 @@ package com.pvchat.proximityvoicechat.plugin.distanceMatrix;
 import com.pvchat.proximityvoicechat.plugin.ProximityVoiceChat;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Server;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 
 public class PlayerDistanceAndVolumeCalculations {
 
@@ -15,31 +18,41 @@ public class PlayerDistanceAndVolumeCalculations {
     public ArrayList<Player> playersEnd;
     public ArrayList<Player> playersNether;
     ProximityVoiceChat pluginInstance;
+    HashMap<String, ArrayList<Player>> playersToWorld;
 
     public PlayerDistanceAndVolumeCalculations(ProximityVoiceChat pluginInstance) {
         this.pluginInstance = pluginInstance;
         players = new ArrayList<>();
+        playersToWorld = new HashMap<>();
     }
 
     //Getting Online players
     public void getPlayers() {
+        players.clear();
+        players.addAll(Bukkit.getOnlinePlayers().stream().toList());
+//        playersOverwold = new ArrayList<>();
+//        playersNether = new ArrayList<>();
+//        playersEnd = new ArrayList<>();
 
-        players = new ArrayList<>(Bukkit.getOnlinePlayers().stream().toList());
-        playersOverwold = new ArrayList<>();
-        playersNether = new ArrayList<>();
-        playersEnd = new ArrayList<>();
+        playersToWorld.clear();
+
+        for(World w : Bukkit.getServer().getWorlds()){
+            playersToWorld.put(w.getName(), new ArrayList<>());
+        }
 
         //Dividing per realm
         for (Player temp : players) {
             String world = temp.getWorld().getName();
 
-            if (world.equals("world")) {
-                playersOverwold.add(temp);
-            } else if (world.equals("world_nether")) {
-                playersNether.add(temp);
-            } else {
-                playersEnd.add(temp);
-            }
+            playersToWorld.get(world).add(temp);
+
+//            if (world.equals("world")) {
+//                playersOverwold.add(temp);
+//            } else if (world.equals("world_nether")) {
+//                playersNether.add(temp);
+//            } else {
+//                playersEnd.add(temp);
+//            }
         }
     }
 
@@ -70,9 +83,19 @@ public class PlayerDistanceAndVolumeCalculations {
         if (players.size() > 1) {
             //System.out.println("ilosc graczy na serw: "+players.size());
 
-            addToVolumeList(p, playersOverwold);
-            addToVolumeList(p, playersNether);
-            addToVolumeList(p, playersEnd);
+            for (HashMap.Entry<String,ArrayList<Player>> entry : playersToWorld.entrySet()){
+                addToVolumeList(p, entry.getValue());
+//                Bukkit.getScheduler().runTaskAsynchronously(pluginInstance, ()->{
+//                    addToVolumeList(p, entry.getValue());
+//                });
+            }
+
+
+
+
+//            addToVolumeList(p, playersOverwold);
+//            addToVolumeList(p, playersNether);
+//            addToVolumeList(p, playersEnd);
 
         }
 
@@ -103,7 +126,10 @@ public class PlayerDistanceAndVolumeCalculations {
 
     //updating player list
     public void updatePlayerList() {
-        Bukkit.getScheduler().scheduleAsyncRepeatingTask(pluginInstance, () -> {
+
+        //sync
+
+        Bukkit.getScheduler().runTaskTimer(pluginInstance, () -> {
             getPlayers();
             ArrayList<PlayerVolumeData> volumeList=playerVolumeList();
             if (volumeList!=null){
@@ -112,5 +138,27 @@ public class PlayerDistanceAndVolumeCalculations {
                 }
             }
         }, 0, 10);
+
+        //async
+
+//        Bukkit.getScheduler().runTaskTimerAsynchronously(pluginInstance, () -> {
+//            getPlayers();
+//            ArrayList<PlayerVolumeData> volumeList=playerVolumeList();
+//            if (volumeList!=null){
+//                for (PlayerVolumeData temp : volumeList) {
+//                    System.out.println("Player1: " + temp.getPlayer1ID() + " Player2: " + temp.getPlayer2ID() + " Volume: " + temp.getVolumeLevel());
+//                }
+//            }
+//        }, 0, 10);
+
+//        Bukkit.getScheduler().scheduleAsyncRepeatingTask(pluginInstance, () -> {
+//            getPlayers();
+//            ArrayList<PlayerVolumeData> volumeList=playerVolumeList();
+//            if (volumeList!=null){
+//                for (PlayerVolumeData temp : volumeList) {
+//                    System.out.println("Player1: " + temp.getPlayer1ID() + " Player2: " + temp.getPlayer2ID() + " Volume: " + temp.getVolumeLevel());
+//                }
+//            }
+//        }, 0, 10);
     }
 }

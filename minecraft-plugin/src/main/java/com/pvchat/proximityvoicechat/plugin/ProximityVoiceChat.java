@@ -16,7 +16,8 @@ public final class ProximityVoiceChat extends JavaPlugin {
         // PluginConfiguration is not used, ConfigManager is used instead
         configManager = new ConfigManager(this);
         configManager.loadConfig();
-        new PlayerVolumeServer(configManager.getWebSocketPort()).run();
+        //new PlayerVolumeServer(configManager.getWebSocketPort()).run();
+
 
         //Load config from config.yml file
         configManager.loadConfig();
