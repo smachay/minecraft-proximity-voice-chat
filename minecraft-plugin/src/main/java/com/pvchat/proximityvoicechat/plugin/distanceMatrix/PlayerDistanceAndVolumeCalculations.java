@@ -3,24 +3,33 @@ package com.pvchat.proximityvoicechat.plugin.distanceMatrix;
 import com.pvchat.proximityvoicechat.plugin.ProximityVoiceChat;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.function.Consumer;
 
 public class PlayerDistanceAndVolumeCalculations {
 
     public ArrayList<Player> players;
-    ProximityVoiceChat pluginInstance;
-    HashMap<String, ArrayList<Player>> playersToWorld;
+    private ProximityVoiceChat pluginInstance;
+    private HashMap<String, ArrayList<Player>> playersToWorld;
+    private ArrayList<Consumer<ArrayList<PlayerVolumeData>>> stateChangeListeners;
 
     public PlayerDistanceAndVolumeCalculations(ProximityVoiceChat pluginInstance) {
         this.pluginInstance = pluginInstance;
         players = new ArrayList<>();
         playersToWorld = new HashMap<>();
+        stateChangeListeners = new ArrayList<>();
+    }
+
+    public void addStateChangeListener(Consumer<ArrayList<PlayerVolumeData>> stateChangeListener){
+        stateChangeListeners.add(stateChangeListener);
+    }
+
+    public void removeStateChangeListener(Consumer<HashMap<String, ArrayList<Player>>> stateChangeListener) {
+        stateChangeListeners.remove(stateChangeListener);
     }
 
     //Getting Online players
@@ -70,7 +79,7 @@ public class PlayerDistanceAndVolumeCalculations {
             }
 
         }
-        if (p.size() == 0) {
+        if (p.isEmpty()) {
             return null;
         }
         return p;
@@ -98,7 +107,8 @@ public class PlayerDistanceAndVolumeCalculations {
     public void updatePlayerList() {
         Bukkit.getScheduler().runTaskTimer(pluginInstance, () -> {
             getPlayers();
-            playerVolumeList();
+            var playerVolumeMatrix = playerVolumeList();
+            stateChangeListeners.stream().forEach(hashMapConsumer -> hashMapConsumer.accept(playerVolumeMatrix));
 //            ArrayList<PlayerVolumeData> volumeList = playerVolumeList();
 //            if (volumeList!=null){
 //                for (PlayerVolumeData temp : volumeList) {
