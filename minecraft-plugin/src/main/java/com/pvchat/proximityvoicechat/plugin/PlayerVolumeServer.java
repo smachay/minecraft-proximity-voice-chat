@@ -5,7 +5,6 @@ import com.anthonynsimon.url.exceptions.MalformedURLException;
 import com.cedarsoftware.util.io.JsonWriter;
 import com.pvchat.proximityvoicechat.plugin.distanceMatrix.PlayerVolumeData;
 import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
@@ -13,7 +12,6 @@ import org.java_websocket.server.WebSocketServer;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -63,16 +61,22 @@ public class PlayerVolumeServer extends WebSocketServer {
         try {
             var discordUserId = extractDiscordUserId(clientHandshake);
             if (discordUserId == null) {
-                webSocket.send("ERROR: No discord client ID provided (discordID), closing connection.");
-                String ip = webSocket.getRemoteSocketAddress().getAddress().toString();
-                logger.log(Level.WARNING, "Unknown client ({0}) " +
-                        "made incorrect WebSocket request.", ip);
+                sendErrorResponse(webSocket, "No discord client ID provided (discordID), closing connection.");
+                webSocket.close();
+            }
+            if (!pluginInstance.getConfigManager().getPlayerLinks().containsValue(discordUserId)){
+                sendErrorResponse(webSocket, "Provided discord user ID was not registered.");
                 webSocket.close();
             }
             registerNewConnection(discordUserId, webSocket);
         } catch (MalformedURLException e) {
             webSocket.close();
         }
+    }
+    private void sendErrorResponse(WebSocket webSocket, String message){
+        webSocket.send("ERROR: " + message);
+        logger.log(Level.WARNING, "Client " +
+                "generated error: {0}.", message);
     }
 
     private String extractDiscordUserId(ClientHandshake handshake) throws MalformedURLException {
