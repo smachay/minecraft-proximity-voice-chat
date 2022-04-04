@@ -1,12 +1,14 @@
 package com.pvchat.proximityvoicechat.plugin;
 
 import com.pvchat.proximityvoicechat.plugin.distanceMatrix.PlayerDistanceAndVolumeCalculations;
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 
 public final class ProximityVoiceChat extends JavaPlugin {
     private ConfigManager configManager;
     private PlayerDistanceAndVolumeCalculations playerDistanceAndVolumeCalculations;
+    private static ProximityVoiceChat instance;
 
     @Override
     public void onEnable() {
@@ -14,7 +16,15 @@ public final class ProximityVoiceChat extends JavaPlugin {
         // PluginConfiguration is not used, ConfigManager is used instead
         configManager = new ConfigManager(this);
         configManager.loadConfig();
-        new PlayerVolumeServer(configManager.getWebSocketPort(), this).run();
+
+        instance = this;
+
+        Bukkit.getScheduler().scheduleAsyncDelayedTask(this, new Runnable() {
+            @Override
+            public void run() {
+                new PlayerVolumeServer(configManager.getWebSocketPort(), ProximityVoiceChat.instance).run();
+            }
+        });
 
         //Load config from config.yml file
         configManager.loadConfig();
