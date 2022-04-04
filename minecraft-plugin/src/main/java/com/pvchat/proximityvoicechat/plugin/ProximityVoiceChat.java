@@ -1,8 +1,12 @@
 package com.pvchat.proximityvoicechat.plugin;
 
 import com.pvchat.proximityvoicechat.plugin.distanceMatrix.PlayerDistanceAndVolumeCalculations;
+import com.pvchat.proximityvoicechat.plugin.distanceMatrix.PlayerVolumeData;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.List;
+import java.util.function.Consumer;
 
 
 public final class ProximityVoiceChat extends JavaPlugin {
@@ -19,10 +23,11 @@ public final class ProximityVoiceChat extends JavaPlugin {
 
         instance = this;
 
+        var socketServer = new PlayerVolumeServer(configManager.getWebSocketPort(), ProximityVoiceChat.instance);
         Bukkit.getScheduler().scheduleAsyncDelayedTask(this, new Runnable() {
             @Override
             public void run() {
-                new PlayerVolumeServer(configManager.getWebSocketPort(), ProximityVoiceChat.instance).run();
+                socketServer.run();
             }
         });
 
@@ -30,6 +35,7 @@ public final class ProximityVoiceChat extends JavaPlugin {
         configManager.loadConfig();
 
         playerDistanceAndVolumeCalculations = new PlayerDistanceAndVolumeCalculations(this);
+        playerDistanceAndVolumeCalculations.addStateChangeListener(socketServer.sendPlayerVolumeMatrix);
 
         playerDistanceAndVolumeCalculations.updatePlayerList();
     }
