@@ -8,14 +8,16 @@ import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 public class PlayerDistanceAndVolumeCalculations {
 
-    public ArrayList<Player> players;
+    public List<Player> players;
     private ProximityVoiceChat pluginInstance;
-    private HashMap<String, ArrayList<Player>> playersToWorld;
-    private ArrayList<Consumer<ArrayList<PlayerVolumeData>>> stateChangeListeners;
+    private HashMap<String, List<Player>> playersToWorld;
+    private ArrayList<Consumer<List<PlayerVolumeData>>> stateChangeListeners;
 
     public PlayerDistanceAndVolumeCalculations(ProximityVoiceChat pluginInstance) {
         this.pluginInstance = pluginInstance;
@@ -24,11 +26,11 @@ public class PlayerDistanceAndVolumeCalculations {
         stateChangeListeners = new ArrayList<>();
     }
 
-    public void addStateChangeListener(Consumer<ArrayList<PlayerVolumeData>> stateChangeListener){
+    public void addStateChangeListener(Consumer<List<PlayerVolumeData>> stateChangeListener){
         stateChangeListeners.add(stateChangeListener);
     }
 
-    public void removeStateChangeListener(Consumer<HashMap<String, ArrayList<Player>>> stateChangeListener) {
+    public void removeStateChangeListener(Consumer<List<PlayerVolumeData>> stateChangeListener) {
         stateChangeListeners.remove(stateChangeListener);
     }
 
@@ -51,7 +53,7 @@ public class PlayerDistanceAndVolumeCalculations {
         }
     }
 
-    private void addToVolumeList(ArrayList<PlayerVolumeData>  playerVolumeList, ArrayList<Player>  playersOfSomeWorld){
+    private void addToVolumeList(List<PlayerVolumeData>  playerVolumeList, List<Player>  playersOfSomeWorld){
         int size = playersOfSomeWorld.size();
         if (size > 1) {
             for (int i = 0; i < size; i++) {
@@ -71,10 +73,10 @@ public class PlayerDistanceAndVolumeCalculations {
     }
 
     //getting list of player volume pairs
-    public ArrayList<PlayerVolumeData> playerVolumeList() {
+    public List<PlayerVolumeData> playerVolumeList() {
         ArrayList<PlayerVolumeData> p = new ArrayList<>();
         if (players.size() > 1) {
-            for (HashMap.Entry<String,ArrayList<Player>> entry : playersToWorld.entrySet()){
+            for (Map.Entry<String,List<Player>> entry : playersToWorld.entrySet()){
                 addToVolumeList(p, entry.getValue());
             }
 
