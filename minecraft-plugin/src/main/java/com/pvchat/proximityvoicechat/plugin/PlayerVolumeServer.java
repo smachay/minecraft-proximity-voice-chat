@@ -38,6 +38,8 @@ public class PlayerVolumeServer extends WebSocketServer {
         public void accept(List<PlayerVolumeData> matrixData) {
             var playerLinks = pluginInstance.getConfigManager().getPlayerLinks();
 
+            if (matrixData == null) return;
+
             openConnections.forEach((s, webSocket) -> {
                 var sLink = playerLinks.entrySet().stream().filter(uuidStringEntry -> uuidStringEntry.getValue().equals(s)).findAny().orElse(null);
                 if (sLink == null) {
