@@ -10,10 +10,7 @@ import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.logging.Level;
@@ -21,7 +18,7 @@ import java.util.logging.Logger;
 
 public class PlayerVolumeServer extends WebSocketServer {
 
-    private final Map<String /* DC user ID */, WebSocket> openConnections;
+    private final Map<DiscordUserID, WebSocket> openConnections;
     private final Logger logger;
     private final String DISCORD_ID_QUERY_KEY = "discordID";
     private final ProximityVoiceChat pluginInstance;
@@ -36,25 +33,22 @@ public class PlayerVolumeServer extends WebSocketServer {
     public Consumer<List<PlayerVolumeData>> sendPlayerVolumeMatrix = new Consumer<>() {
         @Override
         public void accept(List<PlayerVolumeData> matrixData) {
-            var playerLinks = pluginInstance.getConfigManager().getPlayerLinks();
 
             if (matrixData == null) return;
 
-            openConnections.forEach((s, webSocket) -> {
-                var sLink = playerLinks.entrySet().stream().filter(uuidStringEntry -> uuidStringEntry.getValue().equals(s)).findAny().orElse(null);
-                if (sLink == null) {
-                    logger.log(Level.WARNING, "Open connections list may be corrupt (can't find corresponding MC player UUID).");
-                    return;
-                }
-                String playerUUID = sLink.getKey().toString();
-                ArrayList<PlayerVolumeData> messagePayload = new ArrayList<>();
-                matrixData.forEach(playerVolumeData -> {
-                    if (playerVolumeData.getPlayer1ID().equals(playerUUID) || playerVolumeData.getPlayer2ID().equals(playerUUID)) {
-                        messagePayload.add(playerVolumeData);
-                    }
-                });
-                logger.info("About to send packet:" + JsonWriter.objectToJson(messagePayload.toArray()));
-                webSocket.send(JsonWriter.objectToJson(messagePayload.toArray()));
+            openConnections.forEach((discordUserID, webSocket) -> {
+                var optMcUserID = pluginInstance.getDiscordLink().getMinecraftID(discordUserID);
+                optMcUserID.ifPresentOrElse(mcUserId -> {
+                    var mcUserStringID = mcUserId.toString();
+                    ArrayList<PlayerVolumeData> messagePayload = new ArrayList<>();
+                    matrixData.forEach(playerVolumeData -> {
+                        if (playerVolumeData.getPlayer1ID().equals(mcUserStringID) || playerVolumeData.getPlayer2ID().equals(mcUserStringID)) {
+                            messagePayload.add(playerVolumeData);
+                        }
+                    });
+                    logger.info("About to send packet:" + JsonWriter.objectToJson(messagePayload.toArray()));
+                    webSocket.send(JsonWriter.objectToJson(messagePayload.toArray()));
+                }, () -> logger.log(Level.WARNING, "Open connections list may be corrupt (can't find corresponding MC player UUID)."));
             });
         }
     };
@@ -62,16 +56,17 @@ public class PlayerVolumeServer extends WebSocketServer {
     @Override
     public void onOpen(WebSocket webSocket, ClientHandshake clientHandshake) {
         try {
-            var discordUserId = extractDiscordUserId(clientHandshake);
-            if (discordUserId == null) {
+            var optDiscordUserId = extractDiscordUserId(clientHandshake);
+            optDiscordUserId.ifPresentOrElse(discordUserID -> {
+                if (!pluginInstance.getDiscordLink().hasDiscordUser(discordUserID)){
+                    sendErrorResponse(webSocket, "Provided discord user ID was not registered.");
+                    webSocket.close();
+                }
+                registerNewConnection(discordUserID, webSocket);
+            }, () -> {
                 sendErrorResponse(webSocket, "No discord client ID provided (discordID), closing connection.");
                 webSocket.close();
-            }
-            if (!pluginInstance.getConfigManager().getPlayerLinks().containsValue(discordUserId)){
-                sendErrorResponse(webSocket, "Provided discord user ID was not registered.");
-                webSocket.close();
-            }
-            registerNewConnection(discordUserId, webSocket);
+            });
         } catch (MalformedURLException e) {
             webSocket.close();
         }
@@ -82,16 +77,15 @@ public class PlayerVolumeServer extends WebSocketServer {
                 "generated error: {0}.", message);
     }
 
-    private String extractDiscordUserId(ClientHandshake handshake) throws MalformedURLException {
+    private Optional<DiscordUserID> extractDiscordUserId(ClientHandshake handshake) throws MalformedURLException {
         URL baseUrl = URL.parse(handshake.getResourceDescriptor());
         Map<String, Collection<String>> queryPars = baseUrl.getQueryPairs();
 
-        if (!queryPars.containsKey(DISCORD_ID_QUERY_KEY)) return null;
-        if (queryPars.get(DISCORD_ID_QUERY_KEY).isEmpty()) return null;
-        return queryPars.get(DISCORD_ID_QUERY_KEY).iterator().next();
+        if (!queryPars.containsKey(DISCORD_ID_QUERY_KEY)) return Optional.empty();
+        return Optional.of(DiscordUserID.parse(queryPars.get(DISCORD_ID_QUERY_KEY).iterator().next()));
     }
 
-    private void registerNewConnection(String discordUserId, WebSocket connection) {
+    private void registerNewConnection(DiscordUserID discordUserId, WebSocket connection) {
         openConnections.put(discordUserId, connection);
     }
 
@@ -120,10 +114,4 @@ public class PlayerVolumeServer extends WebSocketServer {
     public void onStart() {
     }
 
-    private String getDiscordID(WebSocket socket){
-         Map.Entry<String, WebSocket> socketEntry = openConnections.entrySet().stream().filter(stringWebSocketEntry ->
-                 stringWebSocketEntry.getValue().equals(socket)).findAny().orElse(null);
-         if (socketEntry == null) return null;
-         return socketEntry.getKey();
-    }
 }

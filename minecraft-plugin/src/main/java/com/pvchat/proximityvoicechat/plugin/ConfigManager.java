@@ -4,6 +4,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -15,7 +16,7 @@ public class ConfigManager {
     private int webSocketPort;
 
     //Player IGN - discord name map
-    private HashMap<UUID, String> playerLinks;
+    private Map<UUID, DiscordUserID> playerLinks;
 
     public ConfigManager(ProximityVoiceChat pluginInstance) {
         this.pluginInstance = pluginInstance;
@@ -34,7 +35,7 @@ public class ConfigManager {
             Set<String> keys = section.getKeys(false);
             keys.forEach(s -> {
                 String value = section.getString(s);
-                if (value != null) playerLinks.put(UUID.fromString(s), value);
+                if (value != null) playerLinks.put(UUID.fromString(s), DiscordUserID.parse(value));
 
             });
         }
@@ -64,11 +65,11 @@ public class ConfigManager {
         this.linearAttenuationFactor = linearAttenuationFactor;
     }
 
-    public HashMap<UUID, String> getPlayerLinks() {
+    public Map<UUID, DiscordUserID> getPlayerLinks() {
         return playerLinks;
     }
 
-    public void setPlayerLinks(HashMap<UUID, String> playerLinks) {
+    public void setPlayerLinks(Map<UUID, DiscordUserID> playerLinks) {
         this.playerLinks = playerLinks;
     }
 
