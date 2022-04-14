@@ -3,7 +3,8 @@
  * @author Stefan Machay, Adam Barankevych
  * @description Describe the basic functions. Maybe a support server link.
  * @source https://github.com/smachay/minecraft-proximity-voice-chat
- */
+ /
+**/
 
 "use strict";
 
@@ -38,7 +39,9 @@ const setVolume = (userId, value) => {
 };
 
 const updateUserVolumes = (userVolumes) => {
-  for (const { userId, volume } of userVolumes) {
+  const users = JSON.parse(userVolumes);
+
+  for (const { userId, volume } of users) {
     setVolume(userId, volume);
   }
 };
@@ -46,15 +49,16 @@ const updateUserVolumes = (userVolumes) => {
 module.exports = class MinecraftVoiceChat {
   load() {}
 
-  start() {
-    setInterval(() => {
-      updateUserVolumes([
-        {
-          userId: 226681495127982080,
-          volume: Math.floor(Math.random() * 50 + 50),
-        },
-      ]);
-    }, 1000);
-  }
+  start() {}
   stop() {}
+};
+
+const socket = new WebSocket("url");
+
+socket.onopen = function (e) {
+  socket.send("Connected");
+};
+
+socket.onmessage = function (event) {
+  updateUserVolumes(event.data);
 };
