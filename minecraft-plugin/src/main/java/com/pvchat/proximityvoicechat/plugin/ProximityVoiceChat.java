@@ -1,18 +1,16 @@
 package com.pvchat.proximityvoicechat.plugin;
 
 import com.pvchat.proximityvoicechat.plugin.distanceMatrix.PlayerDistanceAndVolumeCalculations;
-import com.pvchat.proximityvoicechat.plugin.distanceMatrix.PlayerVolumeData;
+import github.scarsz.discordsrv.DiscordSRV;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import java.util.List;
-import java.util.function.Consumer;
 
 
 public final class ProximityVoiceChat extends JavaPlugin {
     private ConfigManager configManager;
     private PlayerDistanceAndVolumeCalculations playerDistanceAndVolumeCalculations;
     private static ProximityVoiceChat instance;
+    private DiscordLink discordLink;
 
     @Override
     public void onEnable() {
@@ -23,26 +21,36 @@ public final class ProximityVoiceChat extends JavaPlugin {
 
         instance = this;
 
+        discordLink = createDiscordLink();
         var socketServer = new PlayerVolumeServer(configManager.getWebSocketPort(), ProximityVoiceChat.instance);
-        Bukkit.getScheduler().scheduleAsyncDelayedTask(this, new Runnable() {
-            @Override
-            public void run() {
-                socketServer.run();
-            }
-        });
 
-        //Load config from config.yml file
-        configManager.loadConfig();
+        Bukkit.getScheduler().scheduleAsyncDelayedTask(this, socketServer::run);
+
 
         playerDistanceAndVolumeCalculations = new PlayerDistanceAndVolumeCalculations(this);
         playerDistanceAndVolumeCalculations.addStateChangeListener(socketServer.sendPlayerVolumeMatrix);
 
         playerDistanceAndVolumeCalculations.updatePlayerList();
+
+    }
+
+    private DiscordLink createDiscordLink(){
+        var discordSRV = (DiscordSRV) Bukkit.getPluginManager().getPlugin("DiscordSRV");
+        if (discordSRV != null) {
+            Bukkit.getLogger().info("Setting discordSRV as DiscordLink implementation");
+            return new DiscordSRVDiscordLink(discordSRV);
+        }
+        Bukkit.getLogger().info("Setting ConfigManager as DiscordLink implementation");
+        return new ConfigDiscordLink(configManager);
     }
 
     @Override
     public void onDisable() {
         // Plugin shutdown logic
+    }
+
+    public DiscordLink getDiscordLink() {
+        return discordLink;
     }
 
     public ConfigManager getConfigManager() {
