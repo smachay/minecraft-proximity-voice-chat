@@ -5,6 +5,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,15 +15,15 @@ import java.util.function.Consumer;
 
 public class PlayerDistanceAndVolumeCalculations {
 
-    public List<Player> players;
-    private ProximityVoiceChat pluginInstance;
-    private HashMap<String, List<Player>> playersToWorld;
+    //public List<Player> players;
+    //private ProximityVoiceChat pluginInstance;
+    //private HashMap<String, List<Player>> playersToWorld;
     private ArrayList<Consumer<List<PlayerVolumeData>>> stateChangeListeners;
 
-    public PlayerDistanceAndVolumeCalculations(ProximityVoiceChat pluginInstance) {
-        this.pluginInstance = pluginInstance;
-        players = new ArrayList<>();
-        playersToWorld = new HashMap<>();
+    public PlayerDistanceAndVolumeCalculations(){//(ProximityVoiceChat pluginInstance) {
+        //this.pluginInstance = pluginInstance;
+        //players = new ArrayList<>();
+        //playersToWorld = new HashMap<>();
         stateChangeListeners = new ArrayList<>();
     }
 
@@ -35,22 +36,25 @@ public class PlayerDistanceAndVolumeCalculations {
     }
 
     //Getting Online players
-    public void getPlayers() {
-        players.clear();
-        players.addAll(Bukkit.getOnlinePlayers().stream().toList());
+    public HashMap<String, List<Player>> getPlayers() {
+//        players.clear();
+//        players.addAll(Bukkit.getOnlinePlayers().stream().toList());
+//
+//        playersToWorld.clear();
 
-        playersToWorld.clear();
+        HashMap<String, List<Player>> playersToWorld = new HashMap<>();
 
         for(World w : Bukkit.getServer().getWorlds()){
             playersToWorld.put(w.getName(), new ArrayList<>());
         }
 
         //Dividing per realm
-        for (Player temp : players) {
+        for (Player temp : Bukkit.getOnlinePlayers()) {
             String world = temp.getWorld().getName();
 
             playersToWorld.get(world).add(temp);
         }
+        return playersToWorld;
     }
 
     private void addToVolumeList(List<PlayerVolumeData>  playerVolumeList, List<Player>  playersOfSomeWorld){
@@ -75,8 +79,8 @@ public class PlayerDistanceAndVolumeCalculations {
     //getting list of player volume pairs
     public List<PlayerVolumeData> playerVolumeList() {
         ArrayList<PlayerVolumeData> p = new ArrayList<>();
-        if (players.size() > 1) {
-            for (Map.Entry<String,List<Player>> entry : playersToWorld.entrySet()){
+        if (Bukkit.getOnlinePlayers().size() > 1) {
+            for (Map.Entry<String,List<Player>> entry : getPlayers().entrySet()){
                 addToVolumeList(p, entry.getValue());
             }
 
@@ -106,9 +110,9 @@ public class PlayerDistanceAndVolumeCalculations {
     }
 
     //updating player list
-    public void updatePlayerList() {
-        Bukkit.getScheduler().runTaskTimer(pluginInstance, () -> {
-            getPlayers();
+    public void updatePlayerList(Plugin plugin) {
+        Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            //getPlayers();
             var playerVolumeMatrix = playerVolumeList();
             stateChangeListeners.stream().forEach(hashMapConsumer -> hashMapConsumer.accept(playerVolumeMatrix));
 //            ArrayList<PlayerVolumeData> volumeList = playerVolumeList();
