@@ -15,12 +15,14 @@ import java.util.function.Consumer;
 public class PlayerDistanceAndVolumeCalculations {
 
     //public List<Player> players;
-    //private ProximityVoiceChat pluginInstance;
+    private ProximityVoiceChat pluginInstance;
     //private HashMap<String, List<Player>> playersToWorld;
+    private final DiscordLink discordLink;
+
     private ArrayList<Consumer<List<PlayerVolumeData>>> stateChangeListeners;
 
-    public PlayerDistanceAndVolumeCalculations(){//(ProximityVoiceChat pluginInstance) {
-        //this.pluginInstance = pluginInstance;
+    public PlayerDistanceAndVolumeCalculations(ProximityVoiceChat pluginInstance){//(ProximityVoiceChat pluginInstance) {
+        this.pluginInstance = pluginInstance;
         //players = new ArrayList<>();
         //playersToWorld = new HashMap<>();
         stateChangeListeners = new ArrayList<>();
