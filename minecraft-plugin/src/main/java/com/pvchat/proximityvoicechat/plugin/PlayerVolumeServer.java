@@ -22,10 +22,12 @@ public class PlayerVolumeServer extends WebSocketServer {
     private final Logger logger;
     private final String DISCORD_ID_QUERY_KEY = "discordID";
     private final ProximityVoiceChat pluginInstance;
+    private final DiscordLink discordLink;
 
     public PlayerVolumeServer(int webSocketPort, ProximityVoiceChat pluginInstance) {
         super(new InetSocketAddress(webSocketPort));
         this.pluginInstance = pluginInstance;
+        discordLink = pluginInstance.getDiscordLink();
         openConnections = new ConcurrentHashMap<>();
         logger = Bukkit.getLogger();
     }
@@ -33,22 +35,22 @@ public class PlayerVolumeServer extends WebSocketServer {
     public Consumer<List<PlayerVolumeData>> sendPlayerVolumeMatrix = new Consumer<>() {
         @Override
         public void accept(List<PlayerVolumeData> matrixData) {
-
             if (matrixData == null) return;
 
             openConnections.forEach((discordUserID, webSocket) -> {
-                var optMcUserID = pluginInstance.getDiscordLink().getMinecraftID(discordUserID);
-                optMcUserID.ifPresentOrElse(mcUserId -> {
-                    var mcUserStringID = mcUserId.toString();
-                    ArrayList<PlayerVolumeData> messagePayload = new ArrayList<>();
+                if(discordLink.hasDiscordUser(discordUserID)){
+                    ArrayList<PlayerVolumeData> messagePayload = new ArrayList<>(openConnections.size());
                     matrixData.forEach(playerVolumeData -> {
-                        if (playerVolumeData.getPlayer1ID().equals(mcUserStringID) || playerVolumeData.getPlayer2ID().equals(mcUserStringID)) {
+                        if (playerVolumeData.getPlayer1().equals(discordUserID) || playerVolumeData.getPlayer2().equals(discordUserID)) {
                             messagePayload.add(playerVolumeData);
                         }
                     });
-                    logger.info("About to send packet:" + JsonWriter.objectToJson(messagePayload.toArray()));
-                    webSocket.send(JsonWriter.objectToJson(messagePayload.toArray()));
-                }, () -> logger.log(Level.WARNING, "Open connections list may be corrupt (can't find corresponding MC player UUID)."));
+                    if(messagePayload.size() != 0) {
+                        String JSONPlayerVolumeDataList = JsonWriter.objectToJson(messagePayload.toArray());
+                        logger.info("About to send packet:" + JSONPlayerVolumeDataList);
+                        webSocket.send(JSONPlayerVolumeDataList);
+                    }
+                } else logger.log(Level.WARNING, "Open connections list may be corrupt (can't find corresponding MC player UUID for discord ID : " + discordUserID.toString() +").");
             });
         }
     };
@@ -67,7 +69,8 @@ public class PlayerVolumeServer extends WebSocketServer {
                 sendErrorResponse(webSocket, "No discord client ID provided (discordID), closing connection.");
                 webSocket.close();
             });
-        } catch (MalformedURLException e) {
+        } catch (MalformedURLException | IllegalArgumentException e) {
+            sendErrorResponse(webSocket, e.getMessage());
             webSocket.close();
         }
     }
@@ -77,7 +80,7 @@ public class PlayerVolumeServer extends WebSocketServer {
                 "generated error: {0}.", message);
     }
 
-    private Optional<DiscordUserID> extractDiscordUserId(ClientHandshake handshake) throws MalformedURLException {
+    private Optional<DiscordUserID> extractDiscordUserId(ClientHandshake handshake) throws MalformedURLException, IllegalArgumentException {
         URL baseUrl = URL.parse(handshake.getResourceDescriptor());
         Map<String, Collection<String>> queryPars = baseUrl.getQueryPairs();
 
@@ -91,7 +94,6 @@ public class PlayerVolumeServer extends WebSocketServer {
 
     @Override
     public void onClose(WebSocket webSocket, int i, String s, boolean b) {
-        System.out.println(openConnections.containsValue(webSocket));
         openConnections.forEach((s1, webSocket1) -> {
             if (webSocket1.equals(webSocket)) {
                 openConnections.remove(s1);

@@ -1,5 +1,7 @@
 package com.pvchat.proximityvoicechat.plugin.distanceMatrix;
 
+import com.pvchat.proximityvoicechat.plugin.DiscordLink;
+import com.pvchat.proximityvoicechat.plugin.DiscordUserID;
 import com.pvchat.proximityvoicechat.plugin.ProximityVoiceChat;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -7,10 +9,7 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 
 public class PlayerDistanceAndVolumeCalculations {
@@ -25,6 +24,7 @@ public class PlayerDistanceAndVolumeCalculations {
         //players = new ArrayList<>();
         //playersToWorld = new HashMap<>();
         stateChangeListeners = new ArrayList<>();
+        discordLink = pluginInstance.getDiscordLink();
     }
 
     public void addStateChangeListener(Consumer<List<PlayerVolumeData>> stateChangeListener){
@@ -62,13 +62,17 @@ public class PlayerDistanceAndVolumeCalculations {
         if (size > 1) {
             for (int i = 0; i < size; i++) {
                 for (int j = i + 1; j < size; j++) {
-                    Player p1, p2;
-                    p1 = playersOfSomeWorld.get(i);
-                    p2 = playersOfSomeWorld.get(j);
+                    Player p1 = playersOfSomeWorld.get(i);
+                    Player p2 = playersOfSomeWorld.get(j);
+
+                    Optional<DiscordUserID> optionalP1DiscordID = discordLink.getDiscordID(p1.getUniqueId());
+                    Optional<DiscordUserID> optionalP2DiscordID = discordLink.getDiscordID(p2.getUniqueId());
+                    if(optionalP1DiscordID.isEmpty() || optionalP2DiscordID.isEmpty()) continue;
+
                     double distance = distanceCalculator(p1.getLocation(), p2.getLocation());
                     long volume = calculateVolume(distance);
                     if (volume != -1) {
-                        PlayerVolumeData temporary = new PlayerVolumeData(p1.getUniqueId().toString(),p2.getUniqueId().toString(),volume);
+                        PlayerVolumeData temporary = new PlayerVolumeData(optionalP1DiscordID.get(),optionalP2DiscordID.get(),volume);
                         playerVolumeList.add(temporary);
                     }
                 }
