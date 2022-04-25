@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-public class ConfigDiscordLink implements DiscordLink{
+public class ConfigDiscordLink implements DiscordLink {
     private final ConfigManager configManager;
 
     public ConfigDiscordLink(ConfigManager configManager) {
