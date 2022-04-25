@@ -32,6 +32,15 @@ public class PlayerVolumeServer extends WebSocketServer {
         logger = Bukkit.getLogger();
     }
 
+    public void stopServer() {
+        try {
+            stop();
+        } catch (InterruptedException e) {
+            logger.log(Level.WARNING, "Could not stop socket server, was it even running?");
+            Thread.currentThread().interrupt();
+        }
+    }
+
     public Consumer<List<PlayerVolumeData>> sendPlayerVolumeMatrix = new Consumer<>() {
         @Override
         public void accept(List<PlayerVolumeData> matrixData) {

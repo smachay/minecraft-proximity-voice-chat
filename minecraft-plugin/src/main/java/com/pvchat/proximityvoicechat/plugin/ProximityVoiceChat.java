@@ -12,6 +12,8 @@ public final class ProximityVoiceChat extends JavaPlugin {
     private static ProximityVoiceChat instance;
     private DiscordLink discordLink;
 
+    private PlayerVolumeServer socketServer;
+
     @Override
     public void onEnable() {
         // Plugin startup logic
@@ -22,7 +24,7 @@ public final class ProximityVoiceChat extends JavaPlugin {
         instance = this;
 
         discordLink = createDiscordLink();
-        var socketServer = new PlayerVolumeServer(configManager.getWebSocketPort(), ProximityVoiceChat.instance);
+        socketServer = new PlayerVolumeServer(configManager.getWebSocketPort(), ProximityVoiceChat.instance);
 
         Bukkit.getScheduler().scheduleAsyncDelayedTask(this, socketServer::run);
 
@@ -46,7 +48,7 @@ public final class ProximityVoiceChat extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        // Plugin shutdown logic
+        socketServer.stopServer();
     }
 
     public DiscordLink getDiscordLink() {
