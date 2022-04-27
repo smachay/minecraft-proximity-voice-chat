@@ -1,4 +1,4 @@
-package com.pvchat.proximityvoicechat.plugin;
+package com.pvchat.proximityvoicechat.plugin.config;
 
 public class DiscordUserID {
     private final long value;

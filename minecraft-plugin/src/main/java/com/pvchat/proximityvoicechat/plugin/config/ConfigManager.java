@@ -1,5 +1,6 @@
-package com.pvchat.proximityvoicechat.plugin;
+package com.pvchat.proximityvoicechat.plugin.config;
 
+import com.pvchat.proximityvoicechat.plugin.ProximityVoiceChat;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 

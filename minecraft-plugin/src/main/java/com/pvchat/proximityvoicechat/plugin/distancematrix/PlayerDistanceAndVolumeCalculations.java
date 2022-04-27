@@ -1,7 +1,7 @@
-package com.pvchat.proximityvoicechat.plugin.distanceMatrix;
+package com.pvchat.proximityvoicechat.plugin.distancematrix;
 
-import com.pvchat.proximityvoicechat.plugin.DiscordLink;
-import com.pvchat.proximityvoicechat.plugin.DiscordUserID;
+import com.pvchat.proximityvoicechat.plugin.config.DiscordLink;
+import com.pvchat.proximityvoicechat.plugin.config.DiscordUserID;
 import com.pvchat.proximityvoicechat.plugin.ProximityVoiceChat;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;

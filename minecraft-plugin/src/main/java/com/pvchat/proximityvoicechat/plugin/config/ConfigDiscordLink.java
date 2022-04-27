@@ -1,4 +1,4 @@
-package com.pvchat.proximityvoicechat.plugin;
+package com.pvchat.proximityvoicechat.plugin.config;
 
 import java.util.Map;
 import java.util.Optional;

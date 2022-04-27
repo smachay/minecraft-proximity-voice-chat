@@ -1,6 +1,6 @@
-package com.pvchat.proximityvoicechat.plugin.distanceMatrix;
+package com.pvchat.proximityvoicechat.plugin.distancematrix;
 
-import com.pvchat.proximityvoicechat.plugin.DiscordUserID;
+import com.pvchat.proximityvoicechat.plugin.config.DiscordUserID;
 
 public class PlayerVolumeData {
  private DiscordUserID player1;
