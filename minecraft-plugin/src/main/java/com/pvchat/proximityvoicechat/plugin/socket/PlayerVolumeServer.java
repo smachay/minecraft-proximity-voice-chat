@@ -1,8 +1,11 @@
-package com.pvchat.proximityvoicechat.plugin;
+package com.pvchat.proximityvoicechat.plugin.socket;
 
 import com.anthonynsimon.url.URL;
 import com.anthonynsimon.url.exceptions.MalformedURLException;
 import com.cedarsoftware.util.io.JsonWriter;
+import com.pvchat.proximityvoicechat.plugin.DiscordLink;
+import com.pvchat.proximityvoicechat.plugin.DiscordUserID;
+import com.pvchat.proximityvoicechat.plugin.ProximityVoiceChat;
 import com.pvchat.proximityvoicechat.plugin.distanceMatrix.PlayerVolumeData;
 import org.bukkit.Bukkit;
 import org.java_websocket.WebSocket;
@@ -20,9 +23,10 @@ public class PlayerVolumeServer extends WebSocketServer {
 
     private final Map<DiscordUserID, WebSocket> openConnections;
     private final Logger logger;
-    private final String DISCORD_ID_QUERY_KEY = "discordID";
+    private static final String DISCORD_ID_QUERY_KEY = "discordID";
     private final ProximityVoiceChat pluginInstance;
     private final DiscordLink discordLink;
+    public final Consumer<List<PlayerVolumeData>> sendPlayerVolumeMatrix;
 
     public PlayerVolumeServer(int webSocketPort, ProximityVoiceChat pluginInstance) {
         super(new InetSocketAddress(webSocketPort));
@@ -30,6 +34,7 @@ public class PlayerVolumeServer extends WebSocketServer {
         discordLink = pluginInstance.getDiscordLink();
         openConnections = new ConcurrentHashMap<>();
         logger = Bukkit.getLogger();
+        sendPlayerVolumeMatrix = this::sendVolumeData;
     }
 
     public void stopServer() {
@@ -41,28 +46,24 @@ public class PlayerVolumeServer extends WebSocketServer {
         }
     }
 
-    public Consumer<List<PlayerVolumeData>> sendPlayerVolumeMatrix = new Consumer<>() {
-        @Override
-        public void accept(List<PlayerVolumeData> matrixData) {
-            if (matrixData == null) return;
+    public final void sendVolumeData(List<PlayerVolumeData> matrixData) {
+        if (matrixData == null) return;
 
-            openConnections.forEach((discordUserID, webSocket) -> {
-                if(discordLink.hasDiscordUser(discordUserID)){
-                    ArrayList<PlayerVolumeData> messagePayload = new ArrayList<>(openConnections.size());
-                    matrixData.forEach(playerVolumeData -> {
-                        if (playerVolumeData.getPlayer1().equals(discordUserID) || playerVolumeData.getPlayer2().equals(discordUserID)) {
-                            messagePayload.add(playerVolumeData);
-                        }
-                    });
-                    if(messagePayload.size() != 0) {
-                        String JSONPlayerVolumeDataList = JsonWriter.objectToJson(messagePayload.toArray());
-                        logger.info("About to send packet:" + JSONPlayerVolumeDataList);
-                        webSocket.send(JSONPlayerVolumeDataList);
+        openConnections.forEach((discordUserID, webSocket) -> {
+            if(discordLink.hasDiscordUser(discordUserID)){
+                ArrayList<VolumeData> messagePayload = new ArrayList<>(openConnections.size());
+                matrixData.forEach(playerVolumeData -> {
+                    if (playerVolumeData.getPlayer1().equals(discordUserID) || playerVolumeData.getPlayer2().equals(discordUserID)) {
+                        messagePayload.add(new VolumeData(playerVolumeData.getPlayer1().toString(), playerVolumeData.getPlayer2().toString(), playerVolumeData.getVolumeLevel()));
                     }
-                } else logger.log(Level.WARNING, "Open connections list may be corrupt (can't find corresponding MC player UUID for discord ID : " + discordUserID.toString() +").");
-            });
-        }
-    };
+                });
+                if(!messagePayload.isEmpty()) {
+                    String socketMessage = JsonWriter.objectToJson(new SocketMessage(SocketMessage.DATA, messagePayload.toArray()));
+                    webSocket.send(socketMessage);
+                }
+            } else logger.log(Level.WARNING, String.format("Open connections list may be corrupt (can't find corresponding MC player UUID for discord ID : %s", discordUserID.toString()));
+        });
+    }
 
     @Override
     public void onOpen(WebSocket webSocket, ClientHandshake clientHandshake) {
@@ -112,17 +113,17 @@ public class PlayerVolumeServer extends WebSocketServer {
 
     @Override
     public void onMessage(WebSocket webSocket, String s) {
-        if (s.equals("getDistanceMatrix")){
-
-        }
+        //TODO: Handle message event
     }
 
     @Override
     public void onError(WebSocket webSocket, Exception e) {
+        //TODO: Handle socket error
     }
 
     @Override
     public void onStart() {
+        //TODO: Handle socket start
     }
 
 }

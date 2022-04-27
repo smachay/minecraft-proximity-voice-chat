@@ -1,6 +1,7 @@
 package com.pvchat.proximityvoicechat.plugin;
 
 import com.pvchat.proximityvoicechat.plugin.distanceMatrix.PlayerDistanceAndVolumeCalculations;
+import com.pvchat.proximityvoicechat.plugin.socket.PlayerVolumeServer;
 import github.scarsz.discordsrv.DiscordSRV;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;

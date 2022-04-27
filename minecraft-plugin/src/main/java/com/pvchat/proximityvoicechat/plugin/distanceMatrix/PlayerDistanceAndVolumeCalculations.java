@@ -72,9 +72,9 @@ public class PlayerDistanceAndVolumeCalculations {
                     if(optionalP1DiscordID.isEmpty() || optionalP2DiscordID.isEmpty()) continue;
 
                     double distance = distanceCalculator(p1.getLocation(), p2.getLocation());
-                    long volume = calculateVolume(distance);
+                    int volume = calculateVolume(distance);
                     if (volume != -1) {
-                        PlayerVolumeData temporary = new PlayerVolumeData(optionalP1DiscordID.get(),optionalP2DiscordID.get(),volume);
+                        PlayerVolumeData temporary = new PlayerVolumeData(optionalP1DiscordID.get(), optionalP2DiscordID.get(), volume);
                         playerVolumeList.add(temporary);
                     }
                 }
@@ -104,13 +104,13 @@ public class PlayerDistanceAndVolumeCalculations {
     }
 
     //Calculating Volume
-    private long calculateVolume(double distance) {
+    private int calculateVolume(double distance) {
         if (distance > 110) {
             return -1;
         } else if (distance <= 10) {
             return 100;
         } else {
-            return Math.round(110 - distance);
+            return (int) Math.round(110 - distance);
         }
 
     }

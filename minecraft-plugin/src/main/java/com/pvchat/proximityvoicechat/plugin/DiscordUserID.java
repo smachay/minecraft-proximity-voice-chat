@@ -1,7 +1,5 @@
 package com.pvchat.proximityvoicechat.plugin;
 
-import java.util.Objects;
-
 public class DiscordUserID {
     private final long value;
 
