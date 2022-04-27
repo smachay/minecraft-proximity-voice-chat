@@ -1,8 +1,25 @@
 package com.pvchat.proximityvoicechat.plugin.socket;
 
-public record SocketMessage(String messageType, Object payload) {
-    public static final String DATA = "data";
-    public static final String ERROR = "error";
-    public static final String WARNING = "warning";
-    public static final String INFO = "info";
+enum MessageType {
+    DATA("data"),
+    ERROR("error"),
+    WARNING("warning"),
+    INFO("info");
+
+    private final String messageType;
+
+    @Override
+    public String toString() {
+        return messageType;
+    }
+
+    MessageType(String messageType) {
+        this.messageType = messageType;
+    }
+}
+
+public interface SocketMessage {
+
+    public MessageType getMessageType();
+
 }

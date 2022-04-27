@@ -1,9 +1,9 @@
 package com.pvchat.proximityvoicechat.plugin;
 
-import com.pvchat.proximityvoicechat.plugin.config.ConfigDiscordLink;
+import com.pvchat.proximityvoicechat.plugin.config.linkmanagers.ConfigDiscordLink;
 import com.pvchat.proximityvoicechat.plugin.config.ConfigManager;
-import com.pvchat.proximityvoicechat.plugin.config.DiscordLink;
-import com.pvchat.proximityvoicechat.plugin.config.DiscordSRVDiscordLink;
+import com.pvchat.proximityvoicechat.plugin.config.linkmanagers.DiscordLink;
+import com.pvchat.proximityvoicechat.plugin.config.linkmanagers.DiscordSRVDiscordLink;
 import com.pvchat.proximityvoicechat.plugin.distancematrix.PlayerDistanceAndVolumeCalculations;
 import com.pvchat.proximityvoicechat.plugin.socket.PlayerVolumeServer;
 import github.scarsz.discordsrv.DiscordSRV;

@@ -3,7 +3,7 @@ package com.pvchat.proximityvoicechat.plugin.socket;
 import com.anthonynsimon.url.URL;
 import com.anthonynsimon.url.exceptions.MalformedURLException;
 import com.cedarsoftware.util.io.JsonWriter;
-import com.pvchat.proximityvoicechat.plugin.config.DiscordLink;
+import com.pvchat.proximityvoicechat.plugin.config.linkmanagers.DiscordLink;
 import com.pvchat.proximityvoicechat.plugin.config.DiscordUserID;
 import com.pvchat.proximityvoicechat.plugin.ProximityVoiceChat;
 import com.pvchat.proximityvoicechat.plugin.distancematrix.PlayerVolumeData;
@@ -58,7 +58,7 @@ public class PlayerVolumeServer extends WebSocketServer {
                     }
                 });
                 if(!messagePayload.isEmpty()) {
-                    String socketMessage = JsonWriter.objectToJson(new SocketMessage(SocketMessage.DATA, messagePayload.toArray()));
+                    String socketMessage = JsonWriter.objectToJson(new DataMessage(messagePayload.toArray(new VolumeData[0])));
                     webSocket.send(socketMessage);
                 }
             } else logger.log(Level.WARNING, String.format("Open connections list may be corrupt (can't find corresponding MC player UUID for discord ID : %s", discordUserID.toString()));

@@ -1,4 +1,6 @@
-package com.pvchat.proximityvoicechat.plugin.config;
+package com.pvchat.proximityvoicechat.plugin.config.linkmanagers;
+
+import com.pvchat.proximityvoicechat.plugin.config.DiscordUserID;
 
 import java.util.Optional;
 import java.util.UUID;

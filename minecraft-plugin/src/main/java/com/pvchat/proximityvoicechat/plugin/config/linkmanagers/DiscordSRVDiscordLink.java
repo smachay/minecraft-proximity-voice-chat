@@ -1,5 +1,6 @@
-package com.pvchat.proximityvoicechat.plugin.config;
+package com.pvchat.proximityvoicechat.plugin.config.linkmanagers;
 
+import com.pvchat.proximityvoicechat.plugin.config.DiscordUserID;
 import github.scarsz.discordsrv.DiscordSRV;
 
 import java.util.Optional;
