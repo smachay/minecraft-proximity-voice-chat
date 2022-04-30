@@ -1,7 +1,7 @@
 package com.pvchat.proximityvoicechat.plugin.distancematrix;
 
-import com.pvchat.proximityvoicechat.plugin.config.linkmanagers.DiscordLink;
 import com.pvchat.proximityvoicechat.plugin.config.DiscordUserID;
+import com.pvchat.proximityvoicechat.plugin.config.linkmanagers.DiscordLink;
 import com.pvchat.proximityvoicechat.plugin.ProximityVoiceChat;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -10,7 +10,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import java.util.*;
-import java.util.function.Consumer;
+import java.util.function.*;
+import java.util.stream.Stream;
 
 public class PlayerDistanceAndVolumeCalculations {
 
@@ -18,10 +19,19 @@ public class PlayerDistanceAndVolumeCalculations {
     private final DiscordLink discordLink;
     private ArrayList<Consumer<List<PlayerVolumeData>>> stateChangeListeners;
 
-    public PlayerDistanceAndVolumeCalculations(ProximityVoiceChat pluginInstance) {//(ProximityVoiceChat pluginInstance) {
+    private final int maxHearDistance;
+    private final int noAttenuationDistance;
+    private final double volumeIncreaseFactor;
+
+
+    public PlayerDistanceAndVolumeCalculations(ProximityVoiceChat pluginInstance, int maxHearDistance, int noAttenuationDistance) {
+        this.noAttenuationDistance = noAttenuationDistance;
+        this.maxHearDistance = maxHearDistance;
         this.pluginInstance = pluginInstance;
         stateChangeListeners = new ArrayList<>();
         discordLink = pluginInstance.getDiscordLink();
+        double volumeChangeSpectrum = (double) maxHearDistance - (double) noAttenuationDistance;
+        volumeIncreaseFactor = (double) 100 / volumeChangeSpectrum;
     }
 
     public void addStateChangeListener(Consumer<List<PlayerVolumeData>> stateChangeListener) {
@@ -32,58 +42,55 @@ public class PlayerDistanceAndVolumeCalculations {
         stateChangeListeners.remove(stateChangeListener);
     }
 
-    //Getting Online players
-    public HashMap<String, List<Player>> getPlayers() {
-        HashMap<String, List<Player>> playersToWorld = new HashMap<>();
-        for (World w : Bukkit.getServer().getWorlds()) {
-            playersToWorld.put(w.getName(), new ArrayList<>());
-        }
-        //Dividing per realm
-        for (Player temp : Bukkit.getOnlinePlayers()) {
-            String world = temp.getWorld().getName();
+    private void addToVolumeList(List<PlayerVolumeData> playerVolumeList, List<Player> playersOfSomeWorld) {
+        int size = playersOfSomeWorld.size();
+        if (size > 1) {
+            for (int i = 0; i < size; i++) {
+                for (int j = i + 1; j < size; j++) {
+                    Player p1 = playersOfSomeWorld.get(i);
+                    Player p2 = playersOfSomeWorld.get(j);
 
-            playersToWorld.get(world).add(temp);
+                    Optional<DiscordUserID> optionalP1DiscordID = discordLink.getDiscordID(p1.getUniqueId());
+                    Optional<DiscordUserID> optionalP2DiscordID = discordLink.getDiscordID(p2.getUniqueId());
+                    if (optionalP1DiscordID.isEmpty() || optionalP2DiscordID.isEmpty()) continue;
+
+                    double distance = distanceBetweenTwoPlayers(p1.getLocation(), p2.getLocation());
+                    int volume = calculateVolume(distance);
+                    if (volume > 0) {
+                        playerVolumeList.add(new PlayerVolumeData(optionalP1DiscordID.get(), optionalP2DiscordID.get(), volume));
+                    }
+                }
+            }
         }
-        return playersToWorld;
     }
 
-//    private void addToVolumeList(List<PlayerVolumeData> playerVolumeList, List<Player> playersOfSomeWorld) {
-//        int size = playersOfSomeWorld.size();
-//        for (int i = 0; i < size; i++) {
-//            for (int j = i + 1; j < size; j++) {
-//                Player p1 = playersOfSomeWorld.get(i);
-//                Player p2 = playersOfSomeWorld.get(j);
-//
-//                Optional<DiscordUserID> optionalP1DiscordID = discordLink.getDiscordID(p1.getUniqueId());
-//                Optional<DiscordUserID> optionalP2DiscordID = discordLink.getDiscordID(p2.getUniqueId());
-//                if (optionalP1DiscordID.isEmpty() || optionalP2DiscordID.isEmpty()) continue;
-//
-//                double distance = distanceBetweenTwoPlayers(p1.getLocation(), p2.getLocation());
-//                int volume = calculateVolume(distance);
-//                if (volume > 0) {
-//                    PlayerVolumeData temporary = new PlayerVolumeData(optionalP1DiscordID.get(), optionalP2DiscordID.get(), volume);
-//                    playerVolumeList.add(temporary);
-//                }
-//            }
-//        }
-//    }
+    //other version, also not complete
+    private void addToVolumeList2(List<PlayerVolumeData> playerVolumeList, List<Player> playersOfSomeWorld) {
+        Stream<Player> pl = playersOfSomeWorld.stream();
+        playersOfSomeWorld.forEach(p1 -> pl.filter(p2 -> p2 != p1).forEach(p2 -> {
 
-    private void addToVolumeList(List<PlayerVolumeData> playerVolumeList, List<Player> playersOfSomeWorld) {
-        
+            Optional<DiscordUserID> optionalP1DiscordID = discordLink.getDiscordID(p1.getUniqueId());
+            Optional<DiscordUserID> optionalP2DiscordID = discordLink.getDiscordID(p2.getUniqueId());
+
+            if (optionalP1DiscordID.isPresent() && optionalP2DiscordID.isPresent()) {
+                double distance = distanceBetweenTwoPlayers(p1.getLocation(), p2.getLocation());
+                int volume = calculateVolume(distance);
+                if (volume > 0) {
+                    PlayerVolumeData temporary = new PlayerVolumeData(optionalP1DiscordID.get(), optionalP2DiscordID.get(), volume);
+                    playerVolumeList.add(temporary);
+                }
+            }
+
+        }));
     }
 
     //getting list of player volume pairs
-    public List<PlayerVolumeData> playerVolumeList() {
-        ArrayList<PlayerVolumeData> p = new ArrayList<>();
+    public List<PlayerVolumeData> getPlayerVolumeList() {
+        ArrayList<PlayerVolumeData> playerVolumeData = new ArrayList<>();
         if (Bukkit.getOnlinePlayers().size() > 1) {
-            for (Map.Entry<String, List<Player>> entry : getPlayers().entrySet()) {
-                addToVolumeList(p, entry.getValue());
-            }
+            Bukkit.getServer().getWorlds().forEach(world -> addToVolumeList(playerVolumeData, world.getPlayers()));
         }
-        if (p.isEmpty()) {
-            return null;
-        }
-        return p;
+        return playerVolumeData;
     }
 
 
@@ -94,22 +101,20 @@ public class PlayerDistanceAndVolumeCalculations {
 
     //Calculating Volume
     private int calculateVolume(double distance) {
-        if (distance > 110) {
+        if (distance > maxHearDistance) {
             return 0;
-        } else if (distance <= 10) {
+        } else if (distance <= noAttenuationDistance) {
             return 100;
         } else {
-            return (int) Math.round(110 - distance);
+            return (int) Math.round(100 - ((distance - noAttenuationDistance) * volumeIncreaseFactor));
         }
-
     }
 
     //updating player list
-    public void updatePlayerList(Plugin plugin) {
+    public void updateVolume(Plugin plugin) {
         Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            var playerVolumeMatrix = playerVolumeList();
             stateChangeListeners.stream().forEach((Consumer<List<PlayerVolumeData>> hashMapConsumer) -> {
-                hashMapConsumer.accept(playerVolumeMatrix);
+                hashMapConsumer.accept(getPlayerVolumeList());
             });
         }, 0, 10);
     }

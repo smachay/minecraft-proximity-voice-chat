@@ -34,10 +34,10 @@ public final class ProximityVoiceChat extends JavaPlugin {
         Bukkit.getScheduler().scheduleAsyncDelayedTask(this, socketServer::run);
 
 
-        playerDistanceAndVolumeCalculations = new PlayerDistanceAndVolumeCalculations(this);
+        playerDistanceAndVolumeCalculations = new PlayerDistanceAndVolumeCalculations(this, configManager.getMaxHearDistance(), configManager.getNoAttenuationDistance());
         playerDistanceAndVolumeCalculations.addStateChangeListener(socketServer.sendPlayerVolumeMatrix);
 
-        playerDistanceAndVolumeCalculations.updatePlayerList(this);
+        playerDistanceAndVolumeCalculations.updateVolume(this);
 
     }
 

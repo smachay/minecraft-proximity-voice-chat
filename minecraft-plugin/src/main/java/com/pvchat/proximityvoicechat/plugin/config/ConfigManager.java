@@ -13,7 +13,6 @@ public class ConfigManager {
     ProximityVoiceChat pluginInstance;
     private int maxHearDistance;
     private int noAttenuationDistance;
-    private float linearAttenuationFactor;
     private int webSocketPort;
 
     //Player IGN - discord name map
@@ -28,7 +27,6 @@ public class ConfigManager {
         FileConfiguration config = pluginInstance.getConfig();
         maxHearDistance = config.getInt("defaultMaxHearDistance");
         noAttenuationDistance = config.getInt("defaultNoAttenuationDistance");
-        linearAttenuationFactor = (float) config.getDouble("defaultLinearAttenuationFactor");
         webSocketPort = config.getInt("webSocketPort");
         ConfigurationSection section = config.getConfigurationSection("links");
         playerLinks = new HashMap<>();
@@ -56,14 +54,6 @@ public class ConfigManager {
 
     public void setNoAttenuationDistance(int noAttenuationDistance) {
         this.noAttenuationDistance = noAttenuationDistance;
-    }
-
-    public float getLinearAttenuationFactor() {
-        return linearAttenuationFactor;
-    }
-
-    public void setLinearAttenuationFactor(float linearAttenuationFactor) {
-        this.linearAttenuationFactor = linearAttenuationFactor;
     }
 
     public Map<UUID, DiscordUserID> getPlayerLinks() {
