@@ -42,46 +42,32 @@ public class PlayerDistanceAndVolumeCalculations {
         stateChangeListeners.remove(stateChangeListener);
     }
 
+    //adding payers that hear each other to the volume list
     private void addToVolumeList(List<PlayerVolumeData> playerVolumeList, List<Player> playersOfSomeWorld) {
         int size = playersOfSomeWorld.size();
-        if (size > 1) {
-            for (int i = 0; i < size; i++) {
-                for (int j = i + 1; j < size; j++) {
-                    Player p1 = playersOfSomeWorld.get(i);
-                    Player p2 = playersOfSomeWorld.get(j);
 
-                    Optional<DiscordUserID> optionalP1DiscordID = discordLink.getDiscordID(p1.getUniqueId());
-                    Optional<DiscordUserID> optionalP2DiscordID = discordLink.getDiscordID(p2.getUniqueId());
-                    if (optionalP1DiscordID.isEmpty() || optionalP2DiscordID.isEmpty()) continue;
+        for (int i = 0; i < size; i++) {
+            for (int j = i + 1; j < size; j++) {
+                //By using for loop in this way(j=i+1) we can avoid checking
+                //volume between two different players more than once which is efficient.
 
-                    double distance = distanceBetweenTwoPlayers(p1.getLocation(), p2.getLocation());
-                    int volume = calculateVolume(distance);
-                    if (volume > 0) {
-                        playerVolumeList.add(new PlayerVolumeData(optionalP1DiscordID.get(), optionalP2DiscordID.get(), volume));
-                    }
+                Player p1 = playersOfSomeWorld.get(i);
+                Player p2 = playersOfSomeWorld.get(j);
+
+                Optional<DiscordUserID> optionalP1DiscordID = discordLink.getDiscordID(p1.getUniqueId());
+                Optional<DiscordUserID> optionalP2DiscordID = discordLink.getDiscordID(p2.getUniqueId());
+                if (optionalP1DiscordID.isEmpty() || optionalP2DiscordID.isEmpty()) continue;
+                //Skiping situations where discord id for any of two players that we check is empty
+
+                int volume = calculateVolume(distanceBetweenTwoPlayers(p1.getLocation(), p2.getLocation()));
+                //Calculating volume between two players on the same world
+
+                if (volume > 0) {
+                    //We add players pairs to volume list only if they can hear each other
+                    playerVolumeList.add(new PlayerVolumeData(optionalP1DiscordID.get(), optionalP2DiscordID.get(), volume));
                 }
             }
         }
-    }
-
-    //other version, also not complete
-    private void addToVolumeList2(List<PlayerVolumeData> playerVolumeList, List<Player> playersOfSomeWorld) {
-        Stream<Player> pl = playersOfSomeWorld.stream();
-        playersOfSomeWorld.forEach(p1 -> pl.filter(p2 -> p2 != p1).forEach(p2 -> {
-
-            Optional<DiscordUserID> optionalP1DiscordID = discordLink.getDiscordID(p1.getUniqueId());
-            Optional<DiscordUserID> optionalP2DiscordID = discordLink.getDiscordID(p2.getUniqueId());
-
-            if (optionalP1DiscordID.isPresent() && optionalP2DiscordID.isPresent()) {
-                double distance = distanceBetweenTwoPlayers(p1.getLocation(), p2.getLocation());
-                int volume = calculateVolume(distance);
-                if (volume > 0) {
-                    PlayerVolumeData temporary = new PlayerVolumeData(optionalP1DiscordID.get(), optionalP2DiscordID.get(), volume);
-                    playerVolumeList.add(temporary);
-                }
-            }
-
-        }));
     }
 
     //getting list of player volume pairs
@@ -113,8 +99,11 @@ public class PlayerDistanceAndVolumeCalculations {
     //updating player list
     public void updateVolume(Plugin plugin) {
         Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            for (PlayerVolumeData pl : getPlayerVolumeList()) {
+                System.out.println(pl.getPlayer1() + " " + pl.getPlayer2() + " " + pl.getVolumeLevel());
+            }
             stateChangeListeners.stream().forEach((Consumer<List<PlayerVolumeData>> hashMapConsumer) -> {
-                hashMapConsumer.accept(getPlayerVolumeList());
+            hashMapConsumer.accept(getPlayerVolumeList());
             });
         }, 0, 10);
     }
