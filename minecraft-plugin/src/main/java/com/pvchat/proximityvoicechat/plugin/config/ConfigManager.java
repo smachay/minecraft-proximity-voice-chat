@@ -25,8 +25,8 @@ public class ConfigManager {
     public void loadConfig() {
         pluginInstance.saveDefaultConfig();
         FileConfiguration config = pluginInstance.getConfig();
-        maxHearDistance = config.getInt("defaultMaxHearDistance");
-        noAttenuationDistance = config.getInt("defaultNoAttenuationDistance");
+        maxHearDistance = config.getInt("maxHearDistance");
+        noAttenuationDistance = config.getInt("noAttenuationDistance");
         webSocketPort = config.getInt("webSocketPort");
         ConfigurationSection section = config.getConfigurationSection("links");
         playerLinks = new HashMap<>();
