@@ -1,6 +1,5 @@
 maxHearDistance: 100
 noAttenuationDistance: 10
-linearAttenuationFactor: 0.9
 webSocketPort: 8080
 links:
   00000000-0000-0000-0000-000000000000: 0
