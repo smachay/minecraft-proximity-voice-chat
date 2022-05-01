@@ -15,31 +15,23 @@ import java.util.stream.Stream;
 
 public class PlayerDistanceAndVolumeCalculations {
 
-    private ProximityVoiceChat pluginInstance;
+    private final ProximityVoiceChat pluginInstance;
     private final DiscordLink discordLink;
-    private ArrayList<Consumer<List<PlayerVolumeData>>> stateChangeListeners;
+    private final Consumer<List<PlayerVolumeData>> stateChangeListener;
 
     private final int maxHearDistance;
     private final int noAttenuationDistance;
     private final double volumeIncreaseFactor;
 
 
-    public PlayerDistanceAndVolumeCalculations(ProximityVoiceChat pluginInstance, int maxHearDistance, int noAttenuationDistance) {
+    public PlayerDistanceAndVolumeCalculations(ProximityVoiceChat pluginInstance, int maxHearDistance, int noAttenuationDistance, Consumer<List<PlayerVolumeData>> stateChangeConsumer) {
         this.noAttenuationDistance = noAttenuationDistance;
         this.maxHearDistance = maxHearDistance;
         this.pluginInstance = pluginInstance;
-        stateChangeListeners = new ArrayList<>();
+        stateChangeListener = stateChangeConsumer;
         discordLink = pluginInstance.getDiscordLink();
         double volumeChangeSpectrum = (double) maxHearDistance - (double) noAttenuationDistance;
         volumeIncreaseFactor = (double) 100 / volumeChangeSpectrum;
-    }
-
-    public void addStateChangeListener(Consumer<List<PlayerVolumeData>> stateChangeListener) {
-        stateChangeListeners.add(stateChangeListener);
-    }
-
-    public void removeStateChangeListener(Consumer<List<PlayerVolumeData>> stateChangeListener) {
-        stateChangeListeners.remove(stateChangeListener);
     }
 
     //adding payers that hear each other to the volume list
@@ -102,9 +94,7 @@ public class PlayerDistanceAndVolumeCalculations {
             for (PlayerVolumeData pl : getPlayerVolumeList()) {
                 System.out.println(pl.getPlayer1() + " " + pl.getPlayer2() + " " + pl.getVolumeLevel());
             }
-            stateChangeListeners.stream().forEach((Consumer<List<PlayerVolumeData>> hashMapConsumer) -> {
-            hashMapConsumer.accept(getPlayerVolumeList());
-            });
+            stateChangeListener.accept(getPlayerVolumeList());
         }, 0, 10);
     }
 }
