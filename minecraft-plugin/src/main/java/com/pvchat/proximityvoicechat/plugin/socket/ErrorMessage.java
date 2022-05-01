@@ -5,7 +5,7 @@ public class ErrorMessage implements SocketMessage {
     private final String messageType = MessageType.ERROR.toString();
     private final String errorMessage;
 
-    public ErrorMessage(String messageType, String errorMessage) {
+    public ErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
     }
 

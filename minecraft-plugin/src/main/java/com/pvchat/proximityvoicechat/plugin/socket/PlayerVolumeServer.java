@@ -71,21 +71,21 @@ public class PlayerVolumeServer extends WebSocketServer {
             var optDiscordUserId = extractDiscordUserId(clientHandshake);
             optDiscordUserId.ifPresentOrElse(discordUserID -> {
                 if (!pluginInstance.getDiscordLink().hasDiscordUser(discordUserID)){
-                    sendErrorResponse(webSocket, "Provided discord user ID was not registered.");
+                    sendErrorMessage(webSocket, "Provided discord user ID was not registered.");
                     webSocket.close();
                 }
                 registerNewConnection(discordUserID, webSocket);
             }, () -> {
-                sendErrorResponse(webSocket, "No discord client ID provided (discordID), closing connection.");
+                sendErrorMessage(webSocket, "No discord client ID provided (discordID), closing connection.");
                 webSocket.close();
             });
         } catch (MalformedURLException | IllegalArgumentException e) {
-            sendErrorResponse(webSocket, e.getMessage());
+            sendErrorMessage(webSocket, e.getMessage());
             webSocket.close();
         }
     }
-    private void sendErrorResponse(WebSocket webSocket, String message){
-        webSocket.send("ERROR: " + message);
+    private void sendErrorMessage(WebSocket webSocket, String message){
+        webSocket.send(JsonWriter.objectToJson(new ErrorMessage(message)));
         logger.log(Level.WARNING, "Client " +
                 "generated error: {0}.", message);
     }
@@ -99,6 +99,15 @@ public class PlayerVolumeServer extends WebSocketServer {
     }
 
     private void registerNewConnection(DiscordUserID discordUserId, WebSocket connection) {
+        if (openConnections.containsKey(discordUserId)) {
+            openConnections.compute(discordUserId, (i, j) -> {
+                if (j != null) {
+                    sendErrorMessage(j, "The same discord id opened new connection, closing this one.");
+                    j.close();
+                }
+                return connection;
+            });
+        }
         openConnections.put(discordUserId, connection);
     }
 
