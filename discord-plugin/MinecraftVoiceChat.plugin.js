@@ -3,10 +3,14 @@
  * @author Stefan Machay, Adam Barankevych
  * @description Describe the basic functions. Maybe a support server link.
  * @source https://github.com/smachay/minecraft-proximity-voice-chat
- /
-**/
+ */
 
 "use strict";
+
+const userId = BdApi.findModuleByProps("getCurrentUser").getCurrentUser().id;
+
+let channelPVC = "949028178599510061";
+let socket;
 
 const join = (filters) => {
   const apply = filters.filter((filter) => filter instanceof Function);
@@ -39,26 +43,48 @@ const setVolume = (userId, value) => {
 };
 
 const updateUserVolumes = (userVolumes) => {
-  const users = JSON.parse(userVolumes);
+  const users = JSON.parse(userVolumes).volumeData;
 
-  for (const { userId, volume } of users) {
-    setVolume(userId, volume);
+  for (const { player1, player2, volume } of users) {
+    if (player1 != userId) setVolume(player1, volume);
+    else setVolume(player2, volume);
+  }
+};
+
+//checks if current voice channel equals proximity voice channel
+const checkChannel = () => {
+  const currId = BdApi.findModuleByProps(
+    "getLastSelectedChannelId"
+  ).getVoiceChannelId();
+
+  if (currId === channelPVC && socket === null) {
+    //IP: ws://localhost:8080?discordID=0
+    socket = new WebSocket(`ws://localhost:8080?discordID=${userId}`);
+    socket.onopen = function (e) {
+      socket.send("Connected");
+    };
+    socket.onmessage = function (event) {
+      updateUserVolumes(event.data);
+    };
+  } else {
+    if (socket != null) {
+      socket = null;
+    }
   }
 };
 
 module.exports = class MinecraftVoiceChat {
-  load() {}
+  load() {
+    socket = null;
+    checkChannel();
+  }
 
-  start() {}
+  start() {
+    BdApi.findModuleByProps("getLastSelectedChannelId").addChangeListener(
+      () => {
+        checkChannel();
+      }
+    );
+  }
   stop() {}
-};
-
-const socket = new WebSocket("url");
-
-socket.onopen = function (e) {
-  socket.send("Connected");
-};
-
-socket.onmessage = function (event) {
-  updateUserVolumes(event.data);
 };
