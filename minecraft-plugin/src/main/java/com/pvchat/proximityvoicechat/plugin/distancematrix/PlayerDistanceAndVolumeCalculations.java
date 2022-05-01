@@ -1,7 +1,7 @@
 package com.pvchat.proximityvoicechat.plugin.distancematrix;
 
-import com.pvchat.proximityvoicechat.plugin.config.linkmanagers.DiscordLink;
 import com.pvchat.proximityvoicechat.plugin.config.DiscordUserID;
+import com.pvchat.proximityvoicechat.plugin.config.linkmanagers.DiscordLink;
 import com.pvchat.proximityvoicechat.plugin.ProximityVoiceChat;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -10,26 +10,31 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import java.util.*;
-import java.util.function.Consumer;
+import java.util.function.*;
+import java.util.stream.Stream;
 
 public class PlayerDistanceAndVolumeCalculations {
 
-    //public List<Player> players;
     private ProximityVoiceChat pluginInstance;
-    //private HashMap<String, List<Player>> playersToWorld;
     private final DiscordLink discordLink;
-
     private ArrayList<Consumer<List<PlayerVolumeData>>> stateChangeListeners;
 
-    public PlayerDistanceAndVolumeCalculations(ProximityVoiceChat pluginInstance){//(ProximityVoiceChat pluginInstance) {
+    private final int maxHearDistance;
+    private final int noAttenuationDistance;
+    private final double volumeIncreaseFactor;
+
+
+    public PlayerDistanceAndVolumeCalculations(ProximityVoiceChat pluginInstance, int maxHearDistance, int noAttenuationDistance) {
+        this.noAttenuationDistance = noAttenuationDistance;
+        this.maxHearDistance = maxHearDistance;
         this.pluginInstance = pluginInstance;
-        //players = new ArrayList<>();
-        //playersToWorld = new HashMap<>();
         stateChangeListeners = new ArrayList<>();
         discordLink = pluginInstance.getDiscordLink();
+        double volumeChangeSpectrum = (double) maxHearDistance - (double) noAttenuationDistance;
+        volumeIncreaseFactor = (double) 100 / volumeChangeSpectrum;
     }
 
-    public void addStateChangeListener(Consumer<List<PlayerVolumeData>> stateChangeListener){
+    public void addStateChangeListener(Consumer<List<PlayerVolumeData>> stateChangeListener) {
         stateChangeListeners.add(stateChangeListener);
     }
 
@@ -37,96 +42,69 @@ public class PlayerDistanceAndVolumeCalculations {
         stateChangeListeners.remove(stateChangeListener);
     }
 
-    //Getting Online players
-    public HashMap<String, List<Player>> getPlayers() {
-//        players.clear();
-//        players.addAll(Bukkit.getOnlinePlayers().stream().toList());
-//
-//        playersToWorld.clear();
-
-        HashMap<String, List<Player>> playersToWorld = new HashMap<>();
-
-        for(World w : Bukkit.getServer().getWorlds()){
-            playersToWorld.put(w.getName(), new ArrayList<>());
-        }
-
-        //Dividing per realm
-        for (Player temp : Bukkit.getOnlinePlayers()) {
-            String world = temp.getWorld().getName();
-
-            playersToWorld.get(world).add(temp);
-        }
-        return playersToWorld;
-    }
-
-    private void addToVolumeList(List<PlayerVolumeData>  playerVolumeList, List<Player>  playersOfSomeWorld){
+    //adding payers that hear each other to the volume list
+    private void addToVolumeList(List<PlayerVolumeData> playerVolumeList, List<Player> playersOfSomeWorld) {
         int size = playersOfSomeWorld.size();
-        if (size > 1) {
-            for (int i = 0; i < size; i++) {
-                for (int j = i + 1; j < size; j++) {
-                    Player p1 = playersOfSomeWorld.get(i);
-                    Player p2 = playersOfSomeWorld.get(j);
 
-                    Optional<DiscordUserID> optionalP1DiscordID = discordLink.getDiscordID(p1.getUniqueId());
-                    Optional<DiscordUserID> optionalP2DiscordID = discordLink.getDiscordID(p2.getUniqueId());
-                    if(optionalP1DiscordID.isEmpty() || optionalP2DiscordID.isEmpty()) continue;
+        for (int i = 0; i < size; i++) {
+            for (int j = i + 1; j < size; j++) {
+                //By using for loop in this way(j=i+1) we can avoid checking
+                //volume between two different players more than once which is efficient.
 
-                    double distance = distanceCalculator(p1.getLocation(), p2.getLocation());
-                    int volume = calculateVolume(distance);
-                    if (volume != -1) {
-                        PlayerVolumeData temporary = new PlayerVolumeData(optionalP1DiscordID.get(), optionalP2DiscordID.get(), volume);
-                        playerVolumeList.add(temporary);
-                    }
+                Player p1 = playersOfSomeWorld.get(i);
+                Player p2 = playersOfSomeWorld.get(j);
+
+                Optional<DiscordUserID> optionalP1DiscordID = discordLink.getDiscordID(p1.getUniqueId());
+                Optional<DiscordUserID> optionalP2DiscordID = discordLink.getDiscordID(p2.getUniqueId());
+                if (optionalP1DiscordID.isEmpty() || optionalP2DiscordID.isEmpty()) continue;
+                //Skiping situations where discord id for any of two players that we check is empty
+
+                int volume = calculateVolume(distanceBetweenTwoPlayers(p1.getLocation(), p2.getLocation()));
+                //Calculating volume between two players on the same world
+
+                if (volume > 0) {
+                    //We add players pairs to volume list only if they can hear each other
+                    playerVolumeList.add(new PlayerVolumeData(optionalP1DiscordID.get(), optionalP2DiscordID.get(), volume));
                 }
             }
         }
     }
 
     //getting list of player volume pairs
-    public List<PlayerVolumeData> playerVolumeList() {
-        ArrayList<PlayerVolumeData> p = new ArrayList<>();
+    public List<PlayerVolumeData> getPlayerVolumeList() {
+        ArrayList<PlayerVolumeData> playerVolumeData = new ArrayList<>();
         if (Bukkit.getOnlinePlayers().size() > 1) {
-            for (Map.Entry<String,List<Player>> entry : getPlayers().entrySet()){
-                addToVolumeList(p, entry.getValue());
-            }
-
+            Bukkit.getServer().getWorlds().forEach(world -> addToVolumeList(playerVolumeData, world.getPlayers()));
         }
-        if (p.isEmpty()) {
-            return null;
-        }
-        return p;
+        return playerVolumeData;
     }
 
 
     //Calculating Distance
-    private double distanceCalculator(Location location1, Location location2) {
+    private double distanceBetweenTwoPlayers(Location location1, Location location2) {
         return location1.distance(location2);
     }
 
     //Calculating Volume
     private int calculateVolume(double distance) {
-        if (distance > 110) {
-            return -1;
-        } else if (distance <= 10) {
+        if (distance > maxHearDistance) {
+            return 0;
+        } else if (distance <= noAttenuationDistance) {
             return 100;
         } else {
-            return (int) Math.round(110 - distance);
+            return (int) Math.round(100 - ((distance - noAttenuationDistance) * volumeIncreaseFactor));
         }
-
     }
 
     //updating player list
-    public void updatePlayerList(Plugin plugin) {
+    public void updateVolume(Plugin plugin) {
         Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            //getPlayers();
-            var playerVolumeMatrix = playerVolumeList();
-            stateChangeListeners.stream().forEach(hashMapConsumer -> hashMapConsumer.accept(playerVolumeMatrix));
-//            ArrayList<PlayerVolumeData> volumeList = playerVolumeList();
-//            if (volumeList!=null){
-//                for (PlayerVolumeData temp : volumeList) {
-//                    System.out.println("Player1: " + temp.getPlayer1ID() + " Player2: " + temp.getPlayer2ID() + " Volume: " + temp.getVolumeLevel());
-//                }
-//            }
+            for (PlayerVolumeData pl : getPlayerVolumeList()) {
+                System.out.println(pl.getPlayer1() + " " + pl.getPlayer2() + " " + pl.getVolumeLevel());
+            }
+            stateChangeListeners.stream().forEach((Consumer<List<PlayerVolumeData>> hashMapConsumer) -> {
+            hashMapConsumer.accept(getPlayerVolumeList());
+            });
         }, 0, 10);
     }
 }
