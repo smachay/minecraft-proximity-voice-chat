@@ -54,6 +54,8 @@ public class PlayerDistanceAndVolumeCalculations {
 
                 int volume;
                 //Calculating volume between two players on the same world
+                if(p1.getWorld() != p2.getWorld()) volume = 0;
+                else volume = calculateVolume(distanceBetweenTwoPlayers(p1.getLocation(), p2.getLocation()));
 
                 //We add players pairs to volume list only if they can hear each other
                 playerVolumeList.add(new PlayerVolumeData(optionalP1DiscordID.get(), optionalP2DiscordID.get(), volume));
