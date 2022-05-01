@@ -6,7 +6,9 @@ import com.cedarsoftware.util.io.JsonWriter;
 import com.pvchat.proximityvoicechat.plugin.config.linkmanagers.DiscordLink;
 import com.pvchat.proximityvoicechat.plugin.config.DiscordUserID;
 import com.pvchat.proximityvoicechat.plugin.ProximityVoiceChat;
+import com.pvchat.proximityvoicechat.plugin.distancematrix.PlayerDistanceAndVolumeCalculations;
 import com.pvchat.proximityvoicechat.plugin.distancematrix.PlayerVolumeData;
+import org.apache.commons.lang.math.IntRange;
 import org.bukkit.Bukkit;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
@@ -50,11 +52,15 @@ public class PlayerVolumeServer extends WebSocketServer {
         openConnections.forEach((discordUserID, webSocket) -> {
             if(discordLink.hasDiscordUser(discordUserID)){
                 ArrayList<VolumeData> messagePayload = new ArrayList<>(openConnections.size());
-                matrixData.forEach(playerVolumeData -> {
-                    if (playerVolumeData.getPlayer1().equals(discordUserID) || playerVolumeData.getPlayer2().equals(discordUserID)) {
-                        messagePayload.add(new VolumeData(playerVolumeData.getPlayer1().toString(), playerVolumeData.getPlayer2().toString(), playerVolumeData.getVolumeLevel()));
-                    }
-                });
+                PlayerDistanceAndVolumeCalculations
+                        .filterPlayerVolumeData(matrixData, discordUserID)
+                        .forEach(playerVolumeData -> messagePayload.add(
+                                new VolumeData(
+                                        playerVolumeData.getPlayer1().toString(),
+                                        playerVolumeData.getPlayer2().toString(),
+                                        playerVolumeData.getVolumeLevel())
+                                )
+                        );
                 if(!messagePayload.isEmpty()) {
                     String socketMessage = JsonWriter.objectToJson(new DataMessage(messagePayload.toArray(new VolumeData[0])));
                     webSocket.send(socketMessage);

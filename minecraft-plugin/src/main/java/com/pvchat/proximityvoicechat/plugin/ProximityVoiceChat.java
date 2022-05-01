@@ -59,6 +59,10 @@ public final class ProximityVoiceChat extends JavaPlugin {
         return discordLink;
     }
 
+    public PlayerDistanceAndVolumeCalculations getPlayerDistanceAndVolumeCalculations() {
+        return playerDistanceAndVolumeCalculations;
+    }
+
     public ConfigManager getConfigManager() {
         return configManager;
     }

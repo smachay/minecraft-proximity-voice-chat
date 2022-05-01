@@ -11,6 +11,7 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.*;
 import java.util.function.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class PlayerDistanceAndVolumeCalculations {
@@ -71,8 +72,12 @@ public class PlayerDistanceAndVolumeCalculations {
         return playerVolumeData;
     }
 
+    public static List<PlayerVolumeData> filterPlayerVolumeData(List<PlayerVolumeData> matrix, DiscordUserID discordUserID) {
+        return matrix.stream().filter(playerVolumeData -> playerVolumeData.getPlayer1().equals(discordUserID) || playerVolumeData.getPlayer2().equals(discordUserID)).collect(Collectors.toList());
+    }
 
-    //Calculating Distance
+
+        //Calculating Distance
     private double distanceBetweenTwoPlayers(Location location1, Location location2) {
         return location1.distance(location2);
     }
