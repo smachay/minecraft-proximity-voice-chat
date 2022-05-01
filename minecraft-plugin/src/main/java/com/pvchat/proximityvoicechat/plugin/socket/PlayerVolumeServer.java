@@ -47,8 +47,6 @@ public class PlayerVolumeServer extends WebSocketServer {
     }
 
     public final void sendVolumeData(List<PlayerVolumeData> matrixData) {
-        if (matrixData == null) return;
-
         openConnections.forEach((discordUserID, webSocket) -> {
             if(discordLink.hasDiscordUser(discordUserID)){
                 ArrayList<VolumeData> messagePayload = new ArrayList<>(openConnections.size());
