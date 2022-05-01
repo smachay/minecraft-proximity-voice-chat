@@ -52,13 +52,11 @@ public class PlayerDistanceAndVolumeCalculations {
                 if (optionalP1DiscordID.isEmpty() || optionalP2DiscordID.isEmpty()) continue;
                 //Skiping situations where discord id for any of two players that we check is empty
 
-                int volume = calculateVolume(distanceBetweenTwoPlayers(p1.getLocation(), p2.getLocation()));
+                int volume;
                 //Calculating volume between two players on the same world
 
-                if (volume > 0) {
-                    //We add players pairs to volume list only if they can hear each other
-                    playerVolumeList.add(new PlayerVolumeData(optionalP1DiscordID.get(), optionalP2DiscordID.get(), volume));
-                }
+                //We add players pairs to volume list only if they can hear each other
+                playerVolumeList.add(new PlayerVolumeData(optionalP1DiscordID.get(), optionalP2DiscordID.get(), volume));
             }
         }
     }
@@ -66,9 +64,9 @@ public class PlayerDistanceAndVolumeCalculations {
     //getting list of player volume pairs
     public List<PlayerVolumeData> getPlayerVolumeList() {
         ArrayList<PlayerVolumeData> playerVolumeData = new ArrayList<>();
-        if (Bukkit.getOnlinePlayers().size() > 1) {
-            Bukkit.getServer().getWorlds().forEach(world -> addToVolumeList(playerVolumeData, world.getPlayers()));
-        }
+//        if (Bukkit.getOnlinePlayers().size() > 1) {
+        Bukkit.getServer().getWorlds().forEach(world -> addToVolumeList(playerVolumeData, new ArrayList<>(Bukkit.getOnlinePlayers())));
+//        }
         return playerVolumeData;
     }
 
