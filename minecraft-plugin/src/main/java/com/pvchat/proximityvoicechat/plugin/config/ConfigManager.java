@@ -1,9 +1,11 @@
-package com.pvchat.proximityvoicechat.plugin;
+package com.pvchat.proximityvoicechat.plugin.config;
 
+import com.pvchat.proximityvoicechat.plugin.ProximityVoiceChat;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -11,10 +13,10 @@ public class ConfigManager {
     ProximityVoiceChat pluginInstance;
     private int maxHearDistance;
     private int noAttenuationDistance;
-    private float linearAttenuationFactor;
+    private int webSocketPort;
 
     //Player IGN - discord name map
-    private HashMap<UUID, String> playerLinks;
+    private Map<UUID, DiscordUserID> playerLinks;
 
     public ConfigManager(ProximityVoiceChat pluginInstance) {
         this.pluginInstance = pluginInstance;
@@ -23,16 +25,16 @@ public class ConfigManager {
     public void loadConfig() {
         pluginInstance.saveDefaultConfig();
         FileConfiguration config = pluginInstance.getConfig();
-        maxHearDistance = config.getInt("defaultMaxHearDistance");
-        noAttenuationDistance = config.getInt("defaultNoAttenuationDistance");
-        linearAttenuationFactor = (float) config.getDouble("defaultLinearAttenuationFactor");
+        maxHearDistance = config.getInt("maxHearDistance");
+        noAttenuationDistance = config.getInt("noAttenuationDistance");
+        webSocketPort = config.getInt("webSocketPort");
         ConfigurationSection section = config.getConfigurationSection("links");
         playerLinks = new HashMap<>();
         if (section != null) {
             Set<String> keys = section.getKeys(false);
             keys.forEach(s -> {
                 String value = section.getString(s);
-                if (value != null) playerLinks.put(UUID.fromString(s), value);
+                if (value != null) playerLinks.put(UUID.fromString(s), DiscordUserID.parse(value));
 
             });
         }
@@ -54,20 +56,16 @@ public class ConfigManager {
         this.noAttenuationDistance = noAttenuationDistance;
     }
 
-    public float getLinearAttenuationFactor() {
-        return linearAttenuationFactor;
-    }
-
-    public void setLinearAttenuationFactor(float linearAttenuationFactor) {
-        this.linearAttenuationFactor = linearAttenuationFactor;
-    }
-
-    public HashMap<UUID, String> getPlayerLinks() {
+    public Map<UUID, DiscordUserID> getPlayerLinks() {
         return playerLinks;
     }
 
-    public void setPlayerLinks(HashMap<UUID, String> playerLinks) {
+    public void setPlayerLinks(Map<UUID, DiscordUserID> playerLinks) {
         this.playerLinks = playerLinks;
+    }
+
+    public int getWebSocketPort() {
+        return webSocketPort;
     }
 
 }
