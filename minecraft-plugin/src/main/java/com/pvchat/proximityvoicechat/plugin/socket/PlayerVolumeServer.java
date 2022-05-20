@@ -8,7 +8,6 @@ import com.pvchat.proximityvoicechat.plugin.config.DiscordUserID;
 import com.pvchat.proximityvoicechat.plugin.ProximityVoiceChat;
 import com.pvchat.proximityvoicechat.plugin.distancematrix.PlayerDistanceAndVolumeCalculations;
 import com.pvchat.proximityvoicechat.plugin.distancematrix.PlayerVolumeData;
-import org.apache.commons.lang.math.IntRange;
 import org.bukkit.Bukkit;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
