@@ -6,9 +6,18 @@ import com.pvchat.proximityvoicechat.plugin.config.linkmanagers.DiscordLink;
 import com.pvchat.proximityvoicechat.plugin.config.linkmanagers.DiscordSRVDiscordLink;
 import com.pvchat.proximityvoicechat.plugin.distancematrix.PlayerDistanceAndVolumeCalculations;
 import com.pvchat.proximityvoicechat.plugin.socket.PlayerVolumeServer;
+import com.pvchat.proximityvoicechat.plugin.socket.SSLCertUtils;
 import github.scarsz.discordsrv.DiscordSRV;
+import org.bouncycastle.operator.OperatorCreationException;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 
 
 public final class ProximityVoiceChat extends JavaPlugin {
@@ -37,6 +46,7 @@ public final class ProximityVoiceChat extends JavaPlugin {
         playerDistanceAndVolumeCalculations = new PlayerDistanceAndVolumeCalculations(this, configManager.getMaxHearDistance(), configManager.getNoAttenuationDistance(), socketServer.sendPlayerVolumeMatrix);
 
         playerDistanceAndVolumeCalculations.updateVolume(this);
+
 
     }
 

@@ -13,12 +13,15 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
-import org.bouncycastle.util.encoders.Base64Encoder;
 
-import java.io.FileNotFoundException;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
@@ -28,8 +31,8 @@ import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
 
-public class SSLCertManager {
-    public SSLCertManager() throws RuntimeException {
+public class SSLCertUtils {
+    public SSLCertUtils() throws RuntimeException {
     }
 
     public static KeyPair generateKeyPair() {
@@ -82,6 +85,26 @@ public class SSLCertManager {
             privKeyOut.write(privKey);
             privKeyOut.write("\n-----END RSA PRIVATE KEY-----\n".getBytes());
         }
+    }
+
+    public static SSLContext getDefaultSSLContext() {
+        KeyStore ks = null;
+        SSLContext sslContext;
+        try {
+            ks = KeyStore.getInstance(KeyStore.getDefaultType());
+        ks.load(Files.newInputStream(Paths.get("keystore")), "".toCharArray());
+        var kmf = KeyManagerFactory.getInstance("SunX509");
+        kmf.init(ks, "".toCharArray());
+        var tmf = TrustManagerFactory.getInstance("SunX509");
+        tmf.init(ks);
+
+        sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+        } catch (KeyStoreException | NoSuchAlgorithmException | KeyManagementException | UnrecoverableKeyException |
+                 CertificateException | IOException e) {
+            throw new IllegalArgumentException();
+        }
+        return sslContext;
     }
 
     public static void saveCertificate(Certificate certificate, String fileName) throws IOException, CertificateEncodingException {
