@@ -26,7 +26,7 @@ public class GetChannelHandler implements HttpHandler {
 
         byte[] response;
         String requestMethod = exchange.getRequestMethod();
-
+        exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
         if (!requestMethod.equals("GET")) {
             response = ("Not supported request method: " + requestMethod).getBytes(StandardCharsets.UTF_8);
             exchange.sendResponseHeaders(405, response.length);
