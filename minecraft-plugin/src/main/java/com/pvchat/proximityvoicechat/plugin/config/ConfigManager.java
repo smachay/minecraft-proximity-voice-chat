@@ -14,6 +14,8 @@ public class ConfigManager {
     private int maxHearDistance;
     private int noAttenuationDistance;
     private int webSocketPort;
+    private int httpServerPort;
+    private String discordPVCChannelID;
 
     //Player IGN - discord name map
     private Map<UUID, DiscordUserID> playerLinks;
@@ -28,6 +30,8 @@ public class ConfigManager {
         maxHearDistance = config.getInt("maxHearDistance");
         noAttenuationDistance = config.getInt("noAttenuationDistance");
         webSocketPort = config.getInt("webSocketPort");
+        httpServerPort = config.getInt("httpServerPort");
+        discordPVCChannelID = config.getString("discordPVCChannelID");
         ConfigurationSection section = config.getConfigurationSection("links");
         playerLinks = new HashMap<>();
         if (section != null) {
@@ -35,7 +39,6 @@ public class ConfigManager {
             keys.forEach(s -> {
                 String value = section.getString(s);
                 if (value != null) playerLinks.put(UUID.fromString(s), DiscordUserID.parse(value));
-
             });
         }
     }
@@ -68,4 +71,19 @@ public class ConfigManager {
         return webSocketPort;
     }
 
+    public int getHttpServerPort() {
+        return httpServerPort;
+    }
+
+    public void setHttpServerPort(int httpServerPort) {
+        this.httpServerPort = httpServerPort;
+    }
+
+    public String getDiscordPVCChannelID() {
+        return discordPVCChannelID;
+    }
+
+    public void setDiscordPVCChannelID(String discordPVCChannelID) {
+        this.discordPVCChannelID = discordPVCChannelID;
+    }
 }

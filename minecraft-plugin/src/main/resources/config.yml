@@ -1,5 +1,7 @@
 maxHearDistance: 100
 noAttenuationDistance: 10
 webSocketPort: 8080
+httpServerPort: 8090
+discordPVCChannelID: 10000000000
 links:
   00000000-0000-0000-0000-000000000000: 0
