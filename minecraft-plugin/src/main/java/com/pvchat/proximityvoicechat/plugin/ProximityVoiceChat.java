@@ -5,19 +5,15 @@ import com.pvchat.proximityvoicechat.plugin.config.ConfigManager;
 import com.pvchat.proximityvoicechat.plugin.config.linkmanagers.DiscordLink;
 import com.pvchat.proximityvoicechat.plugin.config.linkmanagers.DiscordSRVDiscordLink;
 import com.pvchat.proximityvoicechat.plugin.distancematrix.PlayerDistanceAndVolumeCalculations;
+import com.pvchat.proximityvoicechat.plugin.http.PVCHttpsServer;
 import com.pvchat.proximityvoicechat.plugin.socket.PlayerVolumeServer;
-import com.pvchat.proximityvoicechat.plugin.socket.SSLCertUtils;
 import github.scarsz.discordsrv.DiscordSRV;
-import org.bouncycastle.operator.OperatorCreationException;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
+
+import java.util.logging.Level;
 
 
 public final class ProximityVoiceChat extends JavaPlugin {
@@ -27,6 +23,7 @@ public final class ProximityVoiceChat extends JavaPlugin {
     private DiscordLink discordLink;
 
     private PlayerVolumeServer socketServer;
+    private PVCHttpsServer httpServer;
 
     @Override
     public void onEnable() {
@@ -42,11 +39,17 @@ public final class ProximityVoiceChat extends JavaPlugin {
 
         Bukkit.getScheduler().scheduleAsyncDelayedTask(this, socketServer::run);
 
+        try {
+            httpServer = new PVCHttpsServer(this, configManager.getHttpServerPort());
+            Bukkit.getScheduler().scheduleAsyncDelayedTask(this, httpServer::start);
+        }catch(IOException e){
+            getLogger().log(Level.WARNING, "Error starting http server. Might be port conflict.");
+            e.printStackTrace();
+        }
 
         playerDistanceAndVolumeCalculations = new PlayerDistanceAndVolumeCalculations(this, configManager.getMaxHearDistance(), configManager.getNoAttenuationDistance(), socketServer.sendPlayerVolumeMatrix);
 
         playerDistanceAndVolumeCalculations.updateVolume(this);
-
 
     }
 
@@ -63,6 +66,7 @@ public final class ProximityVoiceChat extends JavaPlugin {
     @Override
     public void onDisable() {
         socketServer.stopServer();
+        httpServer.stop(0);
     }
 
     public DiscordLink getDiscordLink() {
