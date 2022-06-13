@@ -36,7 +36,7 @@ public class PlayerVolumeServer extends WebSocketServer {
         this.pluginInstance = pluginInstance;
         discordLink = pluginInstance.getDiscordLink();
         openConnections = new ConcurrentHashMap<>();
-        logger = Bukkit.getLogger();
+        logger = pluginInstance.getLogger();
         sendPlayerVolumeMatrix = this::sendVolumeData;
     }
 

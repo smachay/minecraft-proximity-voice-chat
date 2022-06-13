@@ -1,13 +1,14 @@
 package com.pvchat.proximityvoicechat.plugin.config;
 
 import com.pvchat.proximityvoicechat.plugin.ProximityVoiceChat;
+import org.bouncycastle.asn1.x509.GeneralName;
+import org.bouncycastle.asn1.x509.GeneralNames;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Panda;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class ConfigManager {
     ProximityVoiceChat pluginInstance;
@@ -20,6 +21,8 @@ public class ConfigManager {
     //Player IGN - discord name map
     private Map<UUID, DiscordUserID> playerLinks;
 
+    private GeneralNames serverGeneralNames;
+
     public ConfigManager(ProximityVoiceChat pluginInstance) {
         this.pluginInstance = pluginInstance;
     }
@@ -27,11 +30,27 @@ public class ConfigManager {
     public void loadConfig() {
         pluginInstance.saveDefaultConfig();
         FileConfiguration config = pluginInstance.getConfig();
+
+        //Load pvc volume settings
         maxHearDistance = config.getInt("maxHearDistance");
         noAttenuationDistance = config.getInt("noAttenuationDistance");
         webSocketPort = config.getInt("webSocketPort");
         httpServerPort = config.getInt("httpServerPort");
         discordPVCChannelID = config.getString("discordPVCChannelID");
+
+        //Load general names
+        List<String> strNames = config.getStringList("serverIPAddresses");
+        //TODO: remove debug maeesage
+        strNames.forEach(System.out::println);
+
+        var ipv4 = "^([0-9]{1,3}\\.){3}[0-9]{1,3}$";
+        var generalNames = strNames.stream().map(s -> {
+            if (s.matches(ipv4)) return new GeneralName(GeneralName.iPAddress, s);
+            else return new GeneralName(GeneralName.dNSName, s);
+        }).toArray(GeneralName[]::new);
+        serverGeneralNames = new GeneralNames(generalNames);
+
+        //Load links (optional)
         ConfigurationSection section = config.getConfigurationSection("links");
         playerLinks = new HashMap<>();
         if (section != null) {
@@ -85,5 +104,9 @@ public class ConfigManager {
 
     public void setDiscordPVCChannelID(String discordPVCChannelID) {
         this.discordPVCChannelID = discordPVCChannelID;
+    }
+
+    public GeneralNames getServerGeneralNames() {
+        return serverGeneralNames;
     }
 }
