@@ -3,5 +3,8 @@ noAttenuationDistance: 10
 webSocketPort: 8080
 httpServerPort: 8090
 discordPVCChannelID: 10000000000
+serverIPAddresses: # List of all IP's/dns names used by minecraft server (this is necessary for proper certificate generation)
+  - localhost
+  - 127.0.0.1
 links:
   00000000-0000-0000-0000-000000000000: 0

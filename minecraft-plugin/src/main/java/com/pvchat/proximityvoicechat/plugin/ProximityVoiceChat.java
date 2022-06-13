@@ -8,6 +8,7 @@ import com.pvchat.proximityvoicechat.plugin.config.linkmanagers.DiscordSRVDiscor
 import com.pvchat.proximityvoicechat.plugin.distancematrix.PlayerDistanceAndVolumeCalculations;
 import com.pvchat.proximityvoicechat.plugin.http.PVCHttpsServer;
 import com.pvchat.proximityvoicechat.plugin.socket.PlayerVolumeServer;
+import com.pvchat.proximityvoicechat.plugin.socket.SSLCertUtils;
 import github.scarsz.discordsrv.DiscordSRV;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -15,6 +16,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.IOException;
 
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 public final class ProximityVoiceChat extends JavaPlugin {
@@ -26,58 +28,63 @@ public final class ProximityVoiceChat extends JavaPlugin {
     private PlayerVolumeServer socketServer;
     private PVCHttpsServer httpServer;
 
+    private Logger logger;
+
     @Override
     public void onEnable() {
-        // Plugin startup logic
-        // PluginConfiguration is not used, ConfigManager is used instead
-        configManager = new ConfigManager(this);
-        configManager.loadConfig();
-        instance = this;
-
-        discordLink = createDiscordLink();
-        socketServer = new PlayerVolumeServer(configManager.getWebSocketPort(), ProximityVoiceChat.instance);
-
-        Bukkit.getScheduler().scheduleAsyncDelayedTask(this, socketServer::run);
-
         try {
-            httpServer = new PVCHttpsServer(this, configManager.getHttpServerPort());
-            Bukkit.getScheduler().scheduleAsyncDelayedTask(this, httpServer::start);
-        } catch (IOException e) {
-            getLogger().log(Level.WARNING, "Error starting http server. Might be port conflict.");
+            logger = getLogger();
+            // Plugin startup logic
+            // PluginConfiguration is not used, ConfigManager is used instead
+            configManager = new ConfigManager(this);
+            configManager.loadConfig();
+
+            SSLCertUtils.verifyKeyStorePresent(logger, configManager.getServerGeneralNames());
+            instance = this;
+
+            discordLink = createDiscordLink();
+            socketServer = new PlayerVolumeServer(configManager.getWebSocketPort(), ProximityVoiceChat.instance);
+
+            Bukkit.getScheduler().scheduleAsyncDelayedTask(this, socketServer::run);
+          
+            try {
+                httpServer = new PVCHttpsServer(this, configManager.getHttpServerPort());
+                Bukkit.getScheduler().scheduleAsyncDelayedTask(this, httpServer::start);
+            } catch (IOException e) {
+                logger.log(Level.WARNING, "Error starting http server. Might be port conflict.");
+                e.printStackTrace();
+            }
+
+          //Register commands
+          var pvcCommand = getCommand("pvc");
+          var mainCommandExecutor = new MainCommandExecutor(this);
+          pvcCommand.setExecutor(mainCommandExecutor);
+          pvcCommand.setTabCompleter(mainCommandExecutor);
+          playerDistanceAndVolumeCalculations = new PlayerDistanceAndVolumeCalculations(this, configManager.getMaxHearDistance(), configManager.getNoAttenuationDistance(), socketServer.sendPlayerVolumeMatrix);
+
+          playerDistanceAndVolumeCalculations.updateVolume(this);
+
+        } catch (IllegalArgumentException e) {
+            logger.log(Level.SEVERE, "An error occurred during initialization of the plugin.");
             e.printStackTrace();
+            Bukkit.getPluginManager().disablePlugin(this);
         }
-
-        playerDistanceAndVolumeCalculations = new PlayerDistanceAndVolumeCalculations(
-                this,
-                configManager.getMaxHearDistance(),
-                configManager.getNoAttenuationDistance(),
-                socketServer.getSendPlayerVolumeMatrix()
-        );
-
-        playerDistanceAndVolumeCalculations.updateVolume(this);
-
-        //Register commands
-        var pvcCommand = getCommand("pvc");
-        var mainCommandExecutor = new MainCommandExecutor(this);
-        pvcCommand.setExecutor(mainCommandExecutor);
-        pvcCommand.setTabCompleter(mainCommandExecutor);
-
     }
 
     private DiscordLink createDiscordLink() {
         var discordSRV = (DiscordSRV) Bukkit.getPluginManager().getPlugin("DiscordSRV");
         if (discordSRV != null) {
-            Bukkit.getLogger().info("Setting discordSRV as DiscordLink implementation");
+            logger.info("Setting discordSRV as DiscordLink implementation");
             return new DiscordSRVDiscordLink(discordSRV);
         }
-        Bukkit.getLogger().info("Setting ConfigManager as DiscordLink implementation");
+        logger.info("Setting ConfigManager as DiscordLink implementation");
         return new ConfigDiscordLink(configManager);
     }
 
     @Override
     public void onDisable() {
-        socketServer.stopServer();
-        httpServer.stop(0);
+        if (socketServer != null) socketServer.stopServer();
+        if (httpServer != null) httpServer.stop(0);
     }
 
     public DiscordLink getDiscordLink() {
