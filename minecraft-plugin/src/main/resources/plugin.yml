@@ -1,6 +1,16 @@
-name: Proximity_Voice_Chat
+name: ProximityVoiceChat
 version: '${project.version}'
 main: com.pvchat.proximityvoicechat.plugin.ProximityVoiceChat
 api-version: 1.18
 softdepend:
   - DiscordSRV
+commands:
+  pvc:
+    description: "Base plugin command"
+    permission: pvc.base
+    permission-message: "You dont have permission to run this command"
+    usage: Syntax error, use /pvc for usage info
+permissions:
+  pvc.base:
+    default: op
+    description: Allows you to use /pvc command

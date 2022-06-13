@@ -1,5 +1,6 @@
 package com.pvchat.proximityvoicechat.plugin;
 
+import com.pvchat.proximityvoicechat.plugin.commands.MainCommandExecutor;
 import com.pvchat.proximityvoicechat.plugin.config.linkmanagers.ConfigDiscordLink;
 import com.pvchat.proximityvoicechat.plugin.config.ConfigManager;
 import com.pvchat.proximityvoicechat.plugin.config.linkmanagers.DiscordLink;
@@ -21,7 +22,7 @@ import java.util.logging.Logger;
 public final class ProximityVoiceChat extends JavaPlugin {
     private ConfigManager configManager;
     private PlayerDistanceAndVolumeCalculations playerDistanceAndVolumeCalculations;
-    private static ProximityVoiceChat instance;
+    public static ProximityVoiceChat instance;
     private DiscordLink discordLink;
 
     private PlayerVolumeServer socketServer;
@@ -39,15 +40,13 @@ public final class ProximityVoiceChat extends JavaPlugin {
             configManager.loadConfig();
 
             SSLCertUtils.verifyKeyStorePresent(logger, configManager.getServerGeneralNames());
-
             instance = this;
 
             discordLink = createDiscordLink();
             socketServer = new PlayerVolumeServer(configManager.getWebSocketPort(), ProximityVoiceChat.instance);
 
-
             Bukkit.getScheduler().scheduleAsyncDelayedTask(this, socketServer::run);
-
+          
             try {
                 httpServer = new PVCHttpsServer(this, configManager.getHttpServerPort());
                 Bukkit.getScheduler().scheduleAsyncDelayedTask(this, httpServer::start);
@@ -56,9 +55,14 @@ public final class ProximityVoiceChat extends JavaPlugin {
                 e.printStackTrace();
             }
 
-            playerDistanceAndVolumeCalculations = new PlayerDistanceAndVolumeCalculations(this, configManager.getMaxHearDistance(), configManager.getNoAttenuationDistance(), socketServer.sendPlayerVolumeMatrix);
+          //Register commands
+          var pvcCommand = getCommand("pvc");
+          var mainCommandExecutor = new MainCommandExecutor(this);
+          pvcCommand.setExecutor(mainCommandExecutor);
+          pvcCommand.setTabCompleter(mainCommandExecutor);
+          playerDistanceAndVolumeCalculations = new PlayerDistanceAndVolumeCalculations(this, configManager.getMaxHearDistance(), configManager.getNoAttenuationDistance(), socketServer.getSendPlayerVolumeMatrix());
 
-            playerDistanceAndVolumeCalculations.updateVolume(this);
+          playerDistanceAndVolumeCalculations.updateVolume(this);
 
         } catch (IllegalArgumentException e) {
             logger.log(Level.SEVERE, "An error occurred during initialization of the plugin.");
@@ -93,5 +97,9 @@ public final class ProximityVoiceChat extends JavaPlugin {
 
     public ConfigManager getConfigManager() {
         return configManager;
+    }
+
+    public PlayerVolumeServer getSocketServer() {
+        return socketServer;
     }
 }
