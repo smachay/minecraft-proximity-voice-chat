@@ -60,7 +60,7 @@ public final class ProximityVoiceChat extends JavaPlugin {
           var mainCommandExecutor = new MainCommandExecutor(this);
           pvcCommand.setExecutor(mainCommandExecutor);
           pvcCommand.setTabCompleter(mainCommandExecutor);
-          playerDistanceAndVolumeCalculations = new PlayerDistanceAndVolumeCalculations(this, configManager.getMaxHearDistance(), configManager.getNoAttenuationDistance(), socketServer.sendPlayerVolumeMatrix);
+          playerDistanceAndVolumeCalculations = new PlayerDistanceAndVolumeCalculations(this, configManager.getMaxHearDistance(), configManager.getNoAttenuationDistance(), socketServer.getSendPlayerVolumeMatrix());
 
           playerDistanceAndVolumeCalculations.updateVolume(this);
 
