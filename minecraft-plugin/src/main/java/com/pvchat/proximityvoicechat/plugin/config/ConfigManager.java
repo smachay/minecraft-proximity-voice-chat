@@ -86,4 +86,9 @@ public class ConfigManager {
     public void setDiscordPVCChannelID(String discordPVCChannelID) {
         this.discordPVCChannelID = discordPVCChannelID;
     }
+
+    public void reload() {
+        // If any data was cached by plugin to be saved in config, this is the moment to save all this cached data to config files.
+        loadConfig();
+    }
 }

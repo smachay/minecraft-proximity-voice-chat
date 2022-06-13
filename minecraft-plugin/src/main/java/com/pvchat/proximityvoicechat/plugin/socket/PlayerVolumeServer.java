@@ -20,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class PlayerVolumeServer extends WebSocketServer {
 
@@ -28,7 +29,7 @@ public class PlayerVolumeServer extends WebSocketServer {
     private static final String DISCORD_ID_QUERY_KEY = "discordID";
     private final ProximityVoiceChat pluginInstance;
     private final DiscordLink discordLink;
-    public final Consumer<List<PlayerVolumeData>> sendPlayerVolumeMatrix;
+    private final Consumer<List<PlayerVolumeData>> sendPlayerVolumeMatrix;
 
     public PlayerVolumeServer(int webSocketPort, ProximityVoiceChat pluginInstance) {
         super(new InetSocketAddress(webSocketPort));
@@ -40,9 +41,13 @@ public class PlayerVolumeServer extends WebSocketServer {
         sendPlayerVolumeMatrix = this::sendVolumeData;
     }
 
+    public Consumer<List<PlayerVolumeData>> getSendPlayerVolumeMatrix() {
+        return sendPlayerVolumeMatrix;
+    }
+
     public void stopServer() {
         try {
-            stop();
+            stop(2000);
         } catch (InterruptedException e) {
             logger.log(Level.WARNING, "Could not stop socket server, was it even running?");
             Thread.currentThread().interrupt();
@@ -68,6 +73,10 @@ public class PlayerVolumeServer extends WebSocketServer {
                 }
             } else logger.log(Level.WARNING, String.format("Open connections list may be corrupt (can't find corresponding MC player UUID for discord ID : %s", discordUserID.toString()));
         });
+    }
+
+    public Map<String, String> getConnectedClientList() {
+        return openConnections.entrySet().stream().collect(Collectors.toMap(e -> e.getKey().toString(), e -> e.getValue().getRemoteSocketAddress().toString()));
     }
 
     @Override
