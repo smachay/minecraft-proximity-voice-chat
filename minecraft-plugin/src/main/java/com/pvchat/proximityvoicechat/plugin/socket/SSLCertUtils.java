@@ -5,7 +5,6 @@ import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.BasicConstraints;
 import org.bouncycastle.asn1.x509.Extension;
-import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.asn1.x509.GeneralNames;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
@@ -20,6 +19,7 @@ import javax.net.ssl.TrustManagerFactory;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.*;
@@ -30,10 +30,10 @@ import java.security.cert.X509Certificate;
 import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class SSLCertUtils {
-    public SSLCertUtils() throws RuntimeException {
-    }
 
     public static KeyPair generateKeyPair() {
         KeyPairGenerator generator = null;
@@ -46,7 +46,7 @@ public class SSLCertUtils {
         }
     }
 
-    public static X509Certificate selfSign(KeyPair keyPair, String subjectDN) throws OperatorCreationException, CertificateException, IOException {
+    public static X509Certificate selfSign(KeyPair keyPair, GeneralNames names) throws OperatorCreationException, CertificateException, IOException {
         Provider bcProvider = new BouncyCastleProvider();
         Security.addProvider(bcProvider);
 
@@ -67,8 +67,7 @@ public class SSLCertUtils {
         ContentSigner contentSigner = new JcaContentSignerBuilder(signatureAlgorithm).build(keyPair.getPrivate());
 
         JcaX509v3CertificateBuilder certBuilder = new JcaX509v3CertificateBuilder(dnName, certSerialNumber, startDate, endDate, dnName, keyPair.getPublic());
-        GeneralNames namesList = new GeneralNames(new GeneralName[]{new GeneralName(GeneralName.dNSName, "localhost")});
-        certBuilder.addExtension(Extension.subjectAlternativeName, false, namesList);
+        certBuilder.addExtension(Extension.subjectAlternativeName, false, names);
 
         BasicConstraints basicConstraints = new BasicConstraints(true);
 
@@ -118,13 +117,33 @@ public class SSLCertUtils {
         }
     }
 
-    public static void generateKeyStore() throws CertificateException, IOException, OperatorCreationException, KeyStoreException, NoSuchAlgorithmException {
+    public static void generateKeyStore(GeneralNames names) throws CertificateException, IOException, OperatorCreationException, KeyStoreException, NoSuchAlgorithmException {
         var keyPair = generateKeyPair();
-        var cert = selfSign(keyPair, "dc=127.0.0.1");
+        var cert = selfSign(keyPair, names);
         KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
         ks.load(null, "".toCharArray());
         ks.setKeyEntry("localhost", keyPair.getPrivate(), "".toCharArray(), new java.security.cert.Certificate[]{cert});
         ks.store(new FileOutputStream("keystore"), "".toCharArray());
+    }
+
+    public static void verifyKeyStorePresent(Logger logger, GeneralNames names) {
+        if (FileSystems.getDefault().getPath("keystore").toFile().exists()) {
+            logger.info("Key store detected, using existing one.");
+            return;
+        }
+        logger.info("Key store was not detected, creating a new one.");
+        logger.info("################################################################");
+        logger.info("New key store and certificate will now be generated.");
+        logger.info("Please make sure you configured server ip/dns names properly.");
+        logger.info("################################################################");
+        try {
+            generateKeyStore(names);
+            logger.info("Key store and certificate generated successfully. You can now install certificate in your system.");
+        } catch (CertificateException | IOException | OperatorCreationException | KeyStoreException |
+                 NoSuchAlgorithmException e) {
+            logger.log(Level.SEVERE, "Could not generate key store, make sure config is valid. It is not possible to start plugin.");
+            throw new IllegalArgumentException("Could not generate key store.");
+        }
     }
 
 }
