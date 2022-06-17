@@ -1,5 +1,8 @@
 package com.pvchat.proximityvoicechat.plugin.socket;
 
+/**
+ * Represents message type of {@link SocketMessage} which is being used to communicate between discord and minecraft plugins. Message types are self-explanatory.
+ */
 enum MessageType {
     DATA("data"),
     ERROR("error"),
@@ -18,6 +21,9 @@ enum MessageType {
     }
 }
 
+/**
+ * Stores message which is being used to communicate between discord and minecraft plugins. Message type is represented by {@link MessageType}.
+ */
 public interface SocketMessage {
 
     public MessageType getMessageType();

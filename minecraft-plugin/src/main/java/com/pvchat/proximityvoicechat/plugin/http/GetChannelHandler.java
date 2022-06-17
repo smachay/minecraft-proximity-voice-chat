@@ -8,8 +8,11 @@ import com.sun.net.httpserver.HttpHandler;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Objects;
 
+
+/**
+ * Class handling "/channel" endpoint get connections. Used in {@link PVCHttpsServer}.
+ */
 public class GetChannelHandler implements HttpHandler {
     private final ProximityVoiceChat plugin;
 
@@ -17,6 +20,12 @@ public class GetChannelHandler implements HttpHandler {
         this.plugin = plugin;
     }
 
+    /**
+     * Handles "/channel" endpoint get connections.
+     *
+     * @param exchange
+     * @throws IOException
+     */
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         ConfigManager configManager = plugin.getConfigManager();
@@ -30,7 +39,7 @@ public class GetChannelHandler implements HttpHandler {
         if (!requestMethod.equals("GET")) {
             response = ("Not supported request method: " + requestMethod).getBytes(StandardCharsets.UTF_8);
             exchange.sendResponseHeaders(405, response.length);
-        }else if (discordPVCChannelID != null && discordPVCChannelID.strip().length() > 0) {
+        } else if (discordPVCChannelID != null && discordPVCChannelID.strip().length() > 0) {
             response = discordPVCChannelID.strip().getBytes(StandardCharsets.UTF_8);
             exchange.sendResponseHeaders(200, response.length);
         } else {

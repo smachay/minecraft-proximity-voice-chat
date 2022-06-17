@@ -1,5 +1,8 @@
 package com.pvchat.proximityvoicechat.plugin.socket;
 
+/**
+ * Represents error message.
+ */
 public class ErrorMessage implements SocketMessage {
 
     private final String messageType = MessageType.ERROR.toString();
