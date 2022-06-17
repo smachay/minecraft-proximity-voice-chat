@@ -1,0 +1,7 @@
+com.pvchat.proximityvoicechat.plugin
+com.pvchat.proximityvoicechat.plugin.commands
+com.pvchat.proximityvoicechat.plugin.config
+com.pvchat.proximityvoicechat.plugin.config.linkmanagers
+com.pvchat.proximityvoicechat.plugin.distancematrix
+com.pvchat.proximityvoicechat.plugin.http
+com.pvchat.proximityvoicechat.plugin.socket

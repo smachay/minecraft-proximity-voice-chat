@@ -33,8 +33,16 @@ import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Class responsoble for generating self-signed certificate which is used
+ */
 public class SSLCertUtils {
 
+    /**
+     * Generates new RSA key pair with size 2048
+     *
+     * @return new RSA {@link KeyPair}
+     */
     public static KeyPair generateKeyPair() {
         KeyPairGenerator generator = null;
         try {
@@ -46,6 +54,14 @@ public class SSLCertUtils {
         }
     }
 
+    /**
+     * @param keyPair keypair
+     * @param names   information about certificate owner
+     * @return self-signed {@link X509Certificate} from given keypair.
+     * @throws OperatorCreationException
+     * @throws CertificateException
+     * @throws IOException
+     */
     public static X509Certificate selfSign(KeyPair keyPair, GeneralNames names) throws OperatorCreationException, CertificateException, IOException {
         Provider bcProvider = new BouncyCastleProvider();
         Security.addProvider(bcProvider);
@@ -76,6 +92,13 @@ public class SSLCertUtils {
         return new JcaX509CertificateConverter().setProvider(bcProvider).getCertificate(certBuilder.build(contentSigner));
     }
 
+    /**
+     * Stores given private key ({@link PrivateKey}) in file.
+     *
+     * @param key      key to save.
+     * @param fileName filename.
+     * @throws IOException
+     */
     public static void savePrivateKey(PrivateKey key, String fileName) throws IOException {
         var encoder = Base64.getEncoder();
         try (var privKeyOut = new FileOutputStream(fileName)) {
@@ -86,26 +109,38 @@ public class SSLCertUtils {
         }
     }
 
+    /**
+     * Returns default {@link SSLContext}
+     *
+     * @return default {@link SSLContext}
+     */
     public static SSLContext getDefaultSSLContext() {
         KeyStore ks = null;
         SSLContext sslContext;
         try {
             ks = KeyStore.getInstance(KeyStore.getDefaultType());
-        ks.load(Files.newInputStream(Paths.get("keystore")), "".toCharArray());
-        var kmf = KeyManagerFactory.getInstance("SunX509");
-        kmf.init(ks, "".toCharArray());
-        var tmf = TrustManagerFactory.getInstance("SunX509");
-        tmf.init(ks);
+            ks.load(Files.newInputStream(Paths.get("keystore")), "".toCharArray());
+            var kmf = KeyManagerFactory.getInstance("SunX509");
+            kmf.init(ks, "".toCharArray());
+            var tmf = TrustManagerFactory.getInstance("SunX509");
+            tmf.init(ks);
 
-        sslContext = SSLContext.getInstance("TLS");
-        sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+            sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
         } catch (KeyStoreException | NoSuchAlgorithmException | KeyManagementException | UnrecoverableKeyException |
-                 CertificateException | IOException e) {
+                CertificateException | IOException e) {
             throw new IllegalArgumentException();
         }
         return sslContext;
     }
 
+    /**
+     * Stores given ({@link Certificate}) in file.
+     *
+     * @param certificate certificate to save.
+     * @param fileName    filename.
+     * @throws IOException
+     */
     public static void saveCertificate(Certificate certificate, String fileName) throws IOException, CertificateEncodingException {
         var encoder = Base64.getEncoder();
         try (var certOut = new FileOutputStream(fileName)) {
@@ -117,6 +152,16 @@ public class SSLCertUtils {
         }
     }
 
+    /**
+     * Creates new keystore, saves newly created certificate to it and stores the keystore in the file named keystore.
+     *
+     * @param names certificate owner info.
+     * @throws CertificateException
+     * @throws IOException
+     * @throws OperatorCreationException
+     * @throws KeyStoreException
+     * @throws NoSuchAlgorithmException
+     */
     public static void generateKeyStore(GeneralNames names) throws CertificateException, IOException, OperatorCreationException, KeyStoreException, NoSuchAlgorithmException {
         var keyPair = generateKeyPair();
         var cert = selfSign(keyPair, names);
@@ -126,6 +171,12 @@ public class SSLCertUtils {
         ks.store(new FileOutputStream("keystore"), "".toCharArray());
     }
 
+    /**
+     * Verifies if the file called "keystore" exists. If file doesn't exist, it creates new keystore, generates new keypair, creates new self-signed certificate out of the generated keypair and stores it in the keystore.
+     *
+     * @param logger logger
+     * @param names  certificate owner info.
+     */
     public static void verifyKeyStorePresent(Logger logger, GeneralNames names) {
         if (FileSystems.getDefault().getPath("keystore").toFile().exists()) {
             logger.info("Key store detected, using existing one.");
@@ -140,7 +191,7 @@ public class SSLCertUtils {
             generateKeyStore(names);
             logger.info("Key store and certificate generated successfully. You can now install certificate in your system.");
         } catch (CertificateException | IOException | OperatorCreationException | KeyStoreException |
-                 NoSuchAlgorithmException e) {
+                NoSuchAlgorithmException e) {
             logger.log(Level.SEVERE, "Could not generate key store, make sure config is valid. It is not possible to start plugin.");
             throw new IllegalArgumentException("Could not generate key store.");
         }

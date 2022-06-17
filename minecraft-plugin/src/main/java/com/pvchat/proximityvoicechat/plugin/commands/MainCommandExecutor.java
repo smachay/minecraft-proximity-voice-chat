@@ -12,12 +12,19 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
+/**
+ * Class handles executing Proximity Voice Chat plugin commands.
+ */
 public class MainCommandExecutor implements CommandExecutor, TabCompleter {
     private ConfigManager config;
     private Logger logger;
 
     private ProximityVoiceChat plugin;
 
+    /**
+     * Creates new instance of {@link MainCommandExecutor}.
+     * @param plugin Proximity Voice Chat plugin.
+     */
     public MainCommandExecutor(ProximityVoiceChat plugin) {
         this.plugin = plugin;
         this.logger = plugin.getLogger();
@@ -25,6 +32,14 @@ public class MainCommandExecutor implements CommandExecutor, TabCompleter {
         this.config = plugin.getConfigManager();
     }
 
+    /**
+     * Method executed when user uses command.
+     * @param sender command sender.
+     * @param command command
+     * @param alias alias
+     * @param args command arguments.
+     * @return true if command was executed, false if given command is not supported.
+     */
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
         if (args.length >= 1) {
@@ -46,6 +61,10 @@ public class MainCommandExecutor implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    /**
+     * Prints available Proximity Voice Chat plugin commands.
+     * @param sender command sender.
+     */
     private void printUsageInfo(CommandSender sender) {
         String message = ChatColor.GRAY + "Command usage:" +
                 "\n    /pvc - print this message" +
@@ -54,6 +73,10 @@ public class MainCommandExecutor implements CommandExecutor, TabCompleter {
         sender.sendMessage(message);
     }
 
+    /**
+     * Sends debug info.
+     * @param sender command sender.
+     */
     private void sendDebugInfo(CommandSender sender) {
         var connectedPlayers = plugin.getSocketServer().getConnectedClientList();
         var message = new StringBuilder();
@@ -75,6 +98,10 @@ public class MainCommandExecutor implements CommandExecutor, TabCompleter {
         sender.sendMessage(message.toString());
     }
 
+    /**
+     * Reloads Proximity Voice Chat plugin.
+     * @param sender command sender.
+     */
     private void reloadPlugin(CommandSender sender) {
         if (!(sender instanceof ConsoleCommandSender)) sender.sendMessage(ChatColor.GRAY + "Starting reload...");
         logger.info("Starting reload...");
@@ -83,6 +110,14 @@ public class MainCommandExecutor implements CommandExecutor, TabCompleter {
         if (!(sender instanceof ConsoleCommandSender)) sender.sendMessage(ChatColor.GRAY + "Reload finished");
     }
 
+    /**
+     * Method for displaying command snippets when user presses TAB while using "/pvc" command.
+     * @param sender command sender.
+     * @param command command.
+     * @param alias alias.
+     * @param args command arguments.
+     * @return list of /pvc command options.
+     */
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
         List<String> completeList = null;

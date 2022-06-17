@@ -10,6 +10,9 @@ import org.bukkit.entity.Panda;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Stores Proximity Voice Chat plugin user configuration.
+ */
 public class ConfigManager {
     ProximityVoiceChat pluginInstance;
     private int maxHearDistance;
@@ -23,10 +26,17 @@ public class ConfigManager {
 
     private GeneralNames serverGeneralNames;
 
+    /**
+     * Creates new {@link ConfigManager} instance.
+     * @param pluginInstance plugin instance
+     */
     public ConfigManager(ProximityVoiceChat pluginInstance) {
         this.pluginInstance = pluginInstance;
     }
 
+    /**
+     * Loads configuration from Proximity Voice Chat plugin YAML configuration file.
+     */
     public void loadConfig() {
         pluginInstance.saveDefaultConfig();
         FileConfiguration config = pluginInstance.getConfig();

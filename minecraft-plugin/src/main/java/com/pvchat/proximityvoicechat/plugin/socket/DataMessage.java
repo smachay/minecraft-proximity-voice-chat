@@ -1,5 +1,8 @@
 package com.pvchat.proximityvoicechat.plugin.socket;
 
+/**
+ * Represents data message.
+ */
 public class DataMessage implements SocketMessage {
 
     private final String messageType = MessageType.DATA.toString();
