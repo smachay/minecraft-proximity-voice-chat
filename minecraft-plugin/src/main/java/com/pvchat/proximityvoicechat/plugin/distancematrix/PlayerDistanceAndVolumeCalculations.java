@@ -130,9 +130,6 @@ public class PlayerDistanceAndVolumeCalculations {
      */
     public void updateVolume(Plugin plugin) {
         Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            for (PlayerVolumeData pl : getPlayerVolumeList()) {
-                System.out.println(pl.getPlayer1() + " " + pl.getPlayer2() + " " + pl.getVolumeLevel());
-            }
             stateChangeListener.accept(getPlayerVolumeList());
         }, 0, 10);
     }

@@ -50,8 +50,6 @@ public class ConfigManager {
 
         //Load general names
         List<String> strNames = config.getStringList("serverIPAddresses");
-        //TODO: remove debug maeesage
-        strNames.forEach(System.out::println);
 
         var ipv4 = "^([0-9]{1,3}\\.){3}[0-9]{1,3}$";
         var generalNames = strNames.stream().map(s -> {
