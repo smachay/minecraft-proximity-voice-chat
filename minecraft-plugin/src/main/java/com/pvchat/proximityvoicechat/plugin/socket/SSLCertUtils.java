@@ -169,6 +169,7 @@ public class SSLCertUtils {
         ks.load(null, "".toCharArray());
         ks.setKeyEntry("localhost", keyPair.getPrivate(), "".toCharArray(), new java.security.cert.Certificate[]{cert});
         ks.store(new FileOutputStream("keystore"), "".toCharArray());
+        saveCertificate(cert, "pvc_certificate.crt");
     }
 
     /**
